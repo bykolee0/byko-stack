@@ -1,0 +1,12 @@
+{
+  "name": "byko-plugins",
+  "owner": {
+    "name": "bykolee"
+  },
+  "plugins": [
+    {
+      "name": "byko-stack",
+      "source": "./plugins/byko-stack"
+    }
+  ]
+}
