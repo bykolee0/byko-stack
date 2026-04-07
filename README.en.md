@@ -31,10 +31,10 @@ byko-plugins/
 Inside a Claude Code session, register this repository as a marketplace:
 
 ```
-/plugin marketplace add <github-user>/byko-plugins
+/plugin marketplace add bykolee0/byko-stack
 ```
 
-A local path also works:
+If you have cloned the repo locally, a local path also works:
 
 ```
 /plugin marketplace add /path/to/byko-plugins

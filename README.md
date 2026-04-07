@@ -31,10 +31,10 @@ byko-plugins/
 Claude Code 세션에서 아래 커맨드로 이 저장소를 마켓플레이스로 등록한다.
 
 ```
-/plugin marketplace add <github-user>/byko-plugins
+/plugin marketplace add bykolee0/byko-stack
 ```
 
-로컬 경로로 바로 등록하는 것도 가능하다.
+로컬에 클론한 경우 경로로 바로 등록할 수도 있다.
 
 ```
 /plugin marketplace add /path/to/byko-plugins
