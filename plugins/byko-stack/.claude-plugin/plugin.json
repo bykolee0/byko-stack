@@ -1,0 +1,8 @@
+{
+  "name": "byko-stack",
+  "description": "스펙 기반 개발(Spec-Driven Development) 워크플로우를 위한 스킬 모음",
+  "version": "0.1.0",
+  "author": {
+    "name": "bykolee"
+  }
+}
