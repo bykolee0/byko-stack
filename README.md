@@ -5,7 +5,7 @@
 ██╔══██╗  ╚██╔╝  ██╔═██╗ ██║   ██║    ╚════██║   ██║   ██╔══██║██║     ██╔═██╗ 
 ██████╔╝   ██║   ██║  ██╗╚██████╔╝    ███████║   ██║   ██║  ██║╚██████╗██║  ██╗
 ╚═════╝    ╚═╝   ╚═╝  ╚═╝ ╚═════╝     ╚══════╝   ╚═╝   ╚═╝  ╚═╝ ╚══════╝╚═╝  ╚═╝
- :: byko-plugins ::                                                (Claude Code)
+ :: byko-plugins ::                                          (Claude Code/Codex)
 ```
 
 > 별도의 프레임워크 없이, 오직 스킬만으로 동작하는 미니멀리즘 하네스.
@@ -16,17 +16,24 @@
 
 ```
 byko-plugins/
+├── .agents/
+│   └── plugins/
+│       └── marketplace.json # Codex 마켓플레이스 메타데이터 및 플러그인 목록
 ├── .claude-plugin/
-│   └── marketplace.json     # 마켓플레이스 메타데이터 및 플러그인 목록
+│   └── marketplace.json     # Claude Code 마켓플레이스 메타데이터 및 플러그인 목록
 ├── plugins/
 │   └── byko-stack/          # 개별 플러그인
+│       ├── .codex-plugin/   # Codex 플러그인 매니페스트
+│       ├── .claude-plugin/  # Claude Code 플러그인 매니페스트
 │       └── skills/          # 플러그인에 포함된 스킬들
 └── README.md
 ```
 
 ## 설치 방법
 
-### 1. 마켓플레이스 등록
+### Claude Code
+
+#### 1. 마켓플레이스 등록
 
 Claude Code 세션에서 아래 커맨드로 이 저장소를 마켓플레이스로 등록한다.
 
@@ -40,7 +47,7 @@ Claude Code 세션에서 아래 커맨드로 이 저장소를 마켓플레이스
 /plugin marketplace add /path/to/byko-plugins
 ```
 
-### 2. 플러그인 설치
+#### 2. 플러그인 설치
 
 등록한 마켓플레이스에서 원하는 플러그인을 설치한다.
 
@@ -50,13 +57,23 @@ Claude Code 세션에서 아래 커맨드로 이 저장소를 마켓플레이스
 
 설치 후 `/plugin` 커맨드로 활성 상태를 확인할 수 있다.
 
-### 3. 업데이트
+#### 3. 업데이트
 
 원본 저장소에 변경이 있으면 마켓플레이스를 갱신한다.
 
 ```
 /plugin marketplace update byko-plugins
 ```
+
+### Codex
+
+이 저장소는 Codex 플러그인 매니페스트도 함께 제공한다.
+
+- 마켓플레이스 메타데이터: `.agents/plugins/marketplace.json`
+- 플러그인 매니페스트: `plugins/byko-stack/.codex-plugin/plugin.json`
+- 스킬 디렉토리: `plugins/byko-stack/skills/`
+
+로컬에서 사용할 때는 Codex가 이 저장소의 `.agents/plugins/marketplace.json`을 읽을 수 있는 위치에 두거나, Codex 환경의 플러그인 마켓플레이스 설정에서 이 저장소를 로컬 마켓플레이스로 등록한다.
 
 ## 플러그인 목록
 
@@ -89,11 +106,29 @@ Claude Code 세션에서 아래 커맨드로 이 저장소를 마켓플레이스
 
 1. `plugins/<플러그인-이름>/` 디렉토리를 만든다.
 2. 필요한 `skills/`, `commands/`, `agents/`, `hooks/` 등을 배치한다.
-3. `.claude-plugin/marketplace.json`의 `plugins` 배열에 항목을 추가한다.
+3. Claude Code용 `plugins/<플러그인-이름>/.claude-plugin/plugin.json` 또는 Codex용 `plugins/<플러그인-이름>/.codex-plugin/plugin.json`을 추가한다.
+4. Claude Code는 `.claude-plugin/marketplace.json`, Codex는 `.agents/plugins/marketplace.json`의 `plugins` 배열에 항목을 추가한다.
 
+Claude Code:
 ```json
 {
   "name": "<플러그인-이름>",
   "source": "./plugins/<플러그인-이름>"
+}
+```
+
+Codex:
+```json
+{
+  "name": "<플러그인-이름>",
+  "source": {
+    "source": "local",
+    "path": "./plugins/<플러그인-이름>"
+  },
+  "policy": {
+    "installation": "AVAILABLE",
+    "authentication": "ON_INSTALL"
+  },
+  "category": "Productivity"
 }
 ```

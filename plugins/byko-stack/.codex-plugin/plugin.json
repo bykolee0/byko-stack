@@ -1,0 +1,37 @@
+{
+  "name": "byko-stack",
+  "version": "0.1.0",
+  "description": "A collection of skills for a spec-driven development workflow.",
+  "author": {
+    "name": "bykolee",
+    "url": "https://github.com/bykolee0"
+  },
+  "homepage": "https://github.com/bykolee0/byko-stack",
+  "repository": "https://github.com/bykolee0/byko-stack",
+  "keywords": [
+    "spec-driven-development",
+    "skills",
+    "evaluation",
+    "codex",
+    "claude"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Byko Stack",
+    "shortDescription": "Spec-driven development workflow skills.",
+    "longDescription": "A skill-only workflow for designing implementation specs, building from approved specs, and evaluating specs, plans, and implementations with independent model checks.",
+    "developerName": "bykolee",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive",
+      "Write"
+    ],
+    "websiteURL": "https://github.com/bykolee0/byko-stack",
+    "defaultPrompt": [
+      "Write an implementation spec for this change.",
+      "Implement this feature from the spec.",
+      "Evaluate this plan before implementation."
+    ],
+    "brandColor": "#2563EB"
+  }
+}

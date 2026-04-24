@@ -1,0 +1,20 @@
+{
+  "name": "byko-plugins",
+  "interface": {
+    "displayName": "Byko Plugins"
+  },
+  "plugins": [
+    {
+      "name": "byko-stack",
+      "source": {
+        "source": "local",
+        "path": "./plugins/byko-stack"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}
