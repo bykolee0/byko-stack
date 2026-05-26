@@ -1,0 +1,4 @@
+interface:
+  display_name: "Agent Harness Builder"
+  short_description: "프로젝트별 agent harness 구축."
+  default_prompt: "$agent-harness-builder를 사용해 이 프로젝트의 agent harness를 설계하고 추가해줘."

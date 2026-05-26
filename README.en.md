@@ -85,6 +85,7 @@ A collection of skills for a spec-driven development (SDD) workflow.
 | --- | --- |
 | `spec-designer` | Designs and writes implementation specs through a dialogue with the user. |
 | `spec-dev` | Implements code based on a completed spec, or prepares a ralph-loop package for larger work. |
+| `agent-harness-builder` | Builds agent-facing docs and executable guardrails for existing or new projects. |
 | `claude-eval` | Evaluates documents/code in an isolated context using `claude -p`. |
 | `codex-eval` | Cross-validates artifacts from a different model's perspective via the OpenAI Codex CLI. |
 | `eval-gate` | Orchestrates `claude-eval` and `codex-eval` as a quality gate for specs, plans, and implementations. |

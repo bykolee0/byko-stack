@@ -85,6 +85,7 @@ Claude Code 세션에서 아래 커맨드로 이 저장소를 마켓플레이스
 | --- | --- |
 | `spec-designer` | 유저와 대화하며 구현 스펙 문서를 설계·작성한다. |
 | `spec-dev` | 작성된 스펙을 기반으로 실제 구현을 수행하거나 ralph-loop 준비물을 생성한다. |
+| `agent-harness-builder` | 기존/신규 프로젝트를 분석해 에이전트용 문서 구조와 실행 가능한 guardrail을 구축한다. |
 | `claude-eval` | `claude -p`를 사용해 독립된 컨텍스트에서 문서/코드를 평가한다. |
 | `codex-eval` | OpenAI Codex CLI로 다른 모델 시각에서 교차 검증한다. |
 | `eval-gate` | `claude-eval`과 `codex-eval`을 오케스트레이션해 스펙/계획/구현의 품질 게이트 역할을 한다. |
