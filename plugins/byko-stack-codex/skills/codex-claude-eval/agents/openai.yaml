@@ -1,0 +1,4 @@
+interface:
+  display_name: "Codex Claude Eval"
+  short_description: "Claude CLI 선택 교차검증."
+  default_prompt: "Use $codex-claude-eval to cross-check this artifact with Claude."

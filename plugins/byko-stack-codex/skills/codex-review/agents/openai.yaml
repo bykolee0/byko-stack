@@ -1,0 +1,4 @@
+interface:
+  display_name: "Codex Review"
+  short_description: "Codex subagent 기반 독립 리뷰."
+  default_prompt: "Use $codex-review to independently review these artifacts."

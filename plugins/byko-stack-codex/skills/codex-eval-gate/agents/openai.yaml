@@ -1,0 +1,4 @@
+interface:
+  display_name: "Codex Eval Gate"
+  short_description: "스펙/계획/구현 품질 게이트."
+  default_prompt: "Use $codex-eval-gate to evaluate this spec, plan, or implementation."

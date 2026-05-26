@@ -1,0 +1,4 @@
+interface:
+  display_name: "Codex Spec Dev"
+  short_description: "스펙 기반 구현과 검증."
+  default_prompt: "Use $codex-spec-dev to implement this spec through verification."

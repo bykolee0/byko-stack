@@ -1,0 +1,36 @@
+{
+  "name": "byko-stack-codex",
+  "version": "0.1.0",
+  "description": "Codex-native spec-driven development workflow skills.",
+  "author": {
+    "name": "bykolee",
+    "url": "https://github.com/bykolee0"
+  },
+  "homepage": "https://github.com/bykolee0/byko-stack",
+  "repository": "https://github.com/bykolee0/byko-stack",
+  "keywords": [
+    "spec-driven-development",
+    "codex",
+    "skills",
+    "evaluation",
+    "implementation"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Byko Stack Codex",
+    "shortDescription": "Codex-native spec, eval, and implementation workflow.",
+    "longDescription": "A Codex-optimized variant of Byko Stack for designing implementation specs, evaluating specs/plans/implementations, and carrying implementation through completion with progress reporting, traceability, and Codex goal/subagent-aware workflows.",
+    "developerName": "bykolee",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "Codex용 스펙을 작성해줘.",
+      "이 스펙을 구현해줘.",
+      "스펙/구현을 eval-gate로 검증해줘."
+    ],
+    "brandColor": "#0F766E"
+  }
+}
