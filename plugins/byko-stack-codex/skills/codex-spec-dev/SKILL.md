@@ -13,7 +13,7 @@ description: Codex에 최적화된 스펙 기반 구현 스킬. spec.md, docs/sp
 - 파일을 수정하기 전에 어떤 범위의 수정을 할지 짧게 알린다.
 - 스펙의 모든 AC를 traceability로 추적한다. AC 누락 상태로 완료하지 않는다.
 - 테스트를 실행할 수 없으면 이유와 대체 검증을 기록한다.
-- 긴 구현에서 사용자가 `/goal` 또는 목표 추적을 명시했거나 이미 active goal이 있으면 goal 상태를 활용한다. 없으면 일반 plan/checklist로 진행한다.
+- 긴 구현에서 사용자가 Codex goal 관리 또는 목표 추적을 명시했거나 이미 active goal이 있으면 goal 상태를 활용한다. 없으면 일반 plan/checklist로 진행한다.
 - 사용자 요청이 "구현 시작"이면 계획만 만들고 멈추지 않는다. blocking 조건이 없으면 코드 수정과 검증까지 진행한다.
 
 ## Workflow
@@ -112,7 +112,7 @@ Subagent 위임 기준:
 - 테스트: ...
 
 다음 단계:
-`/codex-eval-gate implementation docs/specs/<project>/spec.md <changed paths>`로 독립 검증을 진행할 수 있습니다.
+`$byko-stack-codex:codex-eval-gate implementation docs/specs/<project>/spec.md <changed paths>`로 독립 검증을 진행할 수 있습니다.
 ```
 
 완료하지 못했으면 "미완료"라고 말하고, 남은 AC와 막힌 결정을 구체적으로 적는다.
@@ -132,7 +132,7 @@ Subagent 위임 기준:
 스펙 보완이 필요합니다.
 - 문제: ...
 - 근거: 파일:라인 또는 스펙 문구
-- 돌아갈 단계: `/codex-spec-designer docs/specs/<project>/spec.md`
+- 돌아갈 단계: `$byko-stack-codex:codex-spec-designer docs/specs/<project>/spec.md`
 ```
 
 ## References

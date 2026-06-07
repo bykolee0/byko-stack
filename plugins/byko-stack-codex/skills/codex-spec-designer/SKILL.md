@@ -92,8 +92,8 @@ AC는 반드시 검증 가능해야 한다. 각 AC에는 검증 방법을 붙인
 - gate 상태: blocking 0, assumed N, open N
 
 다음 단계:
-1. `/codex-eval-gate spec docs/specs/<project>/spec.md`로 독립 검증
-2. 검증을 건너뛰려면 `/codex-spec-dev docs/specs/<project>/spec.md`로 구현 시작
+1. `$byko-stack-codex:codex-eval-gate spec docs/specs/<project>/spec.md`로 독립 검증
+2. 검증을 건너뛰려면 `$byko-stack-codex:codex-spec-dev docs/specs/<project>/spec.md`로 구현 시작
 ```
 
 완료 전이면 완료라고 말하지 않는다. 사용자 답변이 필요한 경우 다음 질문과 재개 지점을 남긴다.

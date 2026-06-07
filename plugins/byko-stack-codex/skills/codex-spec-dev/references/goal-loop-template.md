@@ -2,7 +2,7 @@
 
 ## progress.md
 
-긴 구현에서 Codex가 계속 읽고 업데이트하는 상태 추적 파일이다. 사용자가 `/goal`을 명시했거나 active goal이 있으면 이 파일과 goal 상태를 함께 갱신한다. goal 도구가 없거나 사용할 수 없으면 `progress.md`와 `update_plan`만 사용한다.
+긴 구현에서 Codex가 계속 읽고 업데이트하는 상태 추적 파일이다. 사용자가 Codex goal 관리를 명시했거나 active goal이 있으면 이 파일과 goal 상태를 함께 갱신한다. goal 도구가 없거나 사용할 수 없으면 `progress.md`와 `update_plan`만 사용한다.
 
 ```markdown
 # 구현 진행 현황
@@ -105,6 +105,6 @@
 - docs/specs/[project-name]/progress.md — 진행 추적
 - docs/specs/[project-name]/goal-loop-prompt.md — 긴 구현 또는 재개용 프롬프트
 
-긴 구현을 goal로 관리하려면:
-/goal start "Implement docs/specs/[project-name]/spec.md according to traceability.md"
+긴 구현을 Codex goal로 관리하려면, 사용자에게 goal 생성을 요청하거나 현재 세션의 goal 도구가 제공하는 방식으로 다음 목표를 등록한다:
+"Implement docs/specs/[project-name]/spec.md according to traceability.md"
 ```

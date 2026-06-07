@@ -1,6 +1,6 @@
 ---
 name: codex-claude-eval
-description: Codex 워크플로우에서 claude -p를 사용해 스펙, 계획, 구현 결과를 별도 컨텍스트로 평가하는 선택적 교차검증 스킬. "/codex-claude-eval spec docs/specs/project/spec.md", "/codex-claude-eval plan implementation-plan.md --output ...", "Claude로 eval" 요청이나 codex-eval-gate의 선택 평가 단계에서 사용한다.
+description: Codex 워크플로우에서 claude -p를 사용해 스펙, 계획, 구현 결과를 별도 컨텍스트로 평가하는 선택적 교차검증 스킬. "$byko-stack-codex:codex-claude-eval spec docs/specs/project/spec.md", "$byko-stack-codex:codex-claude-eval plan implementation-plan.md --output ...", "Claude로 eval" 요청이나 codex-eval-gate의 선택 평가 단계에서 사용한다.
 ---
 
 # Codex Claude Eval
