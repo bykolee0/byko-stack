@@ -1,195 +1,103 @@
 ---
 name: eval-gate
-description: 스펙, 구현 계획, 구현 결과를 독립 컨텍스트에서 검증하는 품질 게이트 스킬. 내부적으로 /claude-eval과 /codex-eval을 호출하여 현재 대화의 편향 없이 평가하고, 결과를 종합하여 APPROVED/NEEDS_REVISION을 판정한다. "/eval-gate spec docs/specs/project/spec.md", "/eval-gate plan docs/specs/project/plan.md", "/eval-gate implementation docs/specs/project/spec.md src/" 등으로 트리거. spec-designer에서 스펙 완성 후, spec-dev에서 계획 수립 후, 구현 완료 후 등 단계 전환 시 이 스킬을 통과하면 다음 단계의 품질을 보장할 수 있다.
+description: 스펙, 구현 계획, 구현 결과를 독립 컨텍스트에서 검증하는 품질 게이트 스킬. byko-stack:evaluator 서브에이전트로 현재 대화의 편향 없이 평가하고 APPROVED/NEEDS_REVISION을 판정한다. 교차검증이 필요하면 codex-eval을 병행한다. "/eval-gate spec", "/eval-gate plan", "/eval-gate implementation", "검증해줘", "스펙 평가해줘", "독립 검증" 등으로 트리거. spec-designer/spec-dev의 단계 전환 시는 물론, 임의 문서·코드의 품질 검증이 필요한 모든 경우 단독으로도 사용한다.
 argument-hint: "[mode] [target files...]"
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash, Agent, Skill
 ---
 
 # Eval-Gate: 품질 검증 게이트
 
-스펙/계획/구현의 품질을 독립적으로 검증하는 오케스트레이터다.
-직접 평가하지 않고, `/claude-eval`과 `/codex-eval`을 호출하여 별도 컨텍스트에서 평가한 결과를 종합한다.
+스펙/계획/구현의 정합성을 독립 컨텍스트에서 검증한다. 직접 평가하지 않는다 — 같은 대화 안에서 자기 산출물을 평가하면 확증 편향이 생기므로, 격리된 컨텍스트의 `byko-stack:evaluator`가 문서와 코드만 보고 평가한다.
 
-같은 대화 안에서 자기 산출물을 평가하면 확증 편향이 생긴다. 별도 프로세스에서 문서만 보고 평가해야 진짜 허점이 드러난다.
+먼저 읽을 것: `../../shared/workflow.md`.
+
+방향·성실성 리뷰(문제를 제대로 풀었는가)는 이 스킬이 아니라 `/review`의 몫이다. 이 스킬은 정합성(상위 산출물·코드베이스와 맞는가)을 본다.
 
 ---
 
 ## 사용법
 
 ```
-/eval-gate spec docs/specs/project/spec.md
-/eval-gate plan docs/specs/project/implementation-plan.md
-/eval-gate implementation docs/specs/project/spec.md src/
+/eval-gate spec [스펙 경로]
+/eval-gate plan [계획 경로]
+/eval-gate implementation [스펙 경로] [코드 경로]
+/eval-gate custom [아무 문서] — 평가 기준을 함께 정의
 ```
 
-| 모드 | 호출 시점 | PASS 시 다음 단계 |
-|------|----------|-----------------|
-| **spec** | spec-designer 완료 후 | 📍 `/spec-dev` |
-| **plan** | spec-dev 계획 수립 후 | 📍 구현 진행 |
-| **implementation** | spec-dev 구현 완료 후 | 📍 완료 |
+경로 생략 시 매니페스트에서 해석한다 (workflow.md 탐색 규칙).
 
 ---
 
 ## 이 스킬이 트리거되면
 
-### Step 1: 셀프 게이트 (비용 $0 — 구조적 사전 검증)
+### Step 1: 대상 해석 + 셀프 게이트 (비용 0 — 구조적 사전 검증)
 
-독립 평가 호출 전에, 파일 존재 여부와 필수 섹션 같은 기계적 판단을 먼저 수행한다.
+인자 > 매니페스트 > 유저 확인 순으로 대상을 해석한 뒤, 기계적 사전 검증을 수행한다:
 
-#### mode: spec
-- [ ] spec.md 파일이 존재하는가
-- [ ] ambiguity-ledger.md가 존재하는가
-- [ ] ledger에 `blocking` 항목이 0개인가
-- [ ] AC 테이블이 존재하고, 모든 AC에 검증 방법이 있는가
-- [ ] `assumed` ≤ 2, `open` ≤ 3인가
+**mode: spec** — spec.md 존재 / ledger 존재 시 `blocking` 0개 / AC 테이블 존재 + 모든 AC에 검증 방법
+**mode: plan** — plan 존재 / spec(또는 매니페스트의 AC) 존재 / traceability 있으면 모든 AC 매핑
+**mode: implementation** — spec(또는 AC) 존재 / 관련 테스트 존재 / 테스트 통과 (Bash로 실행)
 
-#### mode: plan
-- [ ] implementation-plan.md 파일이 존재하는가
-- [ ] spec.md가 존재하는가
-- [ ] traceability.md가 있으면, 모든 AC가 매핑되었는가
+**FAIL 시**: 독립 평가를 호출하지 않고 실패 사유와 수정 방법을 구체적으로 안내한다.
 
-#### mode: implementation
-- [ ] spec.md가 존재하는가
-- [ ] 관련 테스트 파일이 존재하는가
-- [ ] 테스트가 통과하는가 (`bash`로 실행)
+통과 시 "구조 검증 통과. 독립 평가를 진행합니다." 안내 후 바로 진행한다 — 평가 방식을 매번 묻지 않는다.
 
-**셀프 게이트 FAIL 시**: 독립 평가를 호출하지 않고 바로 실패를 반환한다.
-실패 사유와 수정 방법을 구체적으로 안내한다.
+### Step 2: 독립 평가 — evaluator 호출
 
-⏸️ 셀프 게이트 통과 시 유저에게 "구조 검증 통과. 독립 평가를 진행합니다." 안내 후 진행.
+`byko-stack:evaluator` 서브에이전트를 호출한다. 전달할 것:
 
----
+- 평가 모드와 대상 파일 경로
+- 맥락: 매니페스트의 **문제 정의**와 **핵심 결정** 발췌 — 이것만. **현재 세션의 결론·기대·"아마 통과할 것" 같은 뉘앙스를 절대 누설하지 않는다**
+- 결과 저장 경로: `<작업 디렉토리>/eval-results/<mode>-claude-<timestamp>.md` (매니페스트가 없으면 대상 옆에 `eval-results/`)
+- custom 모드면 합의한 평가 기준
 
-### Step 2: 평가 방식 확인
+**교차검증**: 유저가 요청했거나, 직전 평가가 논쟁적이었거나, 되돌리기 어려운 변경(스키마, 공개 API)인 경우 `/codex-eval`을 evaluator와 **병렬로** 실행한다. 그 외에는 evaluator 단독이 기본 — 보고 시 교차검증 옵션을 안내만 한다.
 
-유저에게 평가 방식을 확인한다:
+### Step 3: 결과 검증
 
-- **claude-eval만**: `claude -p` 독립 컨텍스트 평가
-- **codex-eval만**: OpenAI Codex 독립 평가
-- **둘 다 (교차검증)**: claude-eval 실행 후 codex-eval로 교차검증
+evaluator의 판정을 그대로 신뢰하지 않는다. FAIL 항목의 근거를 직접 확인하여 분류한다:
 
-⏸️ **유저 답변을 기다린다.**
+- `accepted` — 근거가 타당한 지적
+- `rejected` — 오탐 (근거 파일을 직접 확인하여 반박 가능)
+- `needs_followup` — 타당하지만 유저 판단 필요
 
----
-
-### Step 3: 독립 평가 실행
-
-```bash
-TIMESTAMP=$(date +%Y%m%d-%H%M%S)
-SPEC_DIR="docs/specs/[project-name]"
-mkdir -p "$SPEC_DIR/eval-results"
-```
-
-유저가 선택한 방식에 따라 Skill 도구로 호출한다.
-스킬 미설치 시 유저에게 설치를 안내한다.
-
-**claude-eval 실행 시:**
-```
-/claude-eval [mode] [target files] --output $SPEC_DIR/eval-results/[mode]-claude-${TIMESTAMP}.md
-```
-
-**codex-eval 실행 시:**
-```
-/codex-eval [mode] [target files] --output $SPEC_DIR/eval-results/[mode]-codex-${TIMESTAMP}.md
-```
-
-**둘 다 (교차검증) 시:**
-```
-/claude-eval [mode] [target files] --output $SPEC_DIR/eval-results/[mode]-claude-${TIMESTAMP}.md
-/codex-eval --cross $SPEC_DIR/eval-results/[mode]-claude-${TIMESTAMP}.md
-```
-
-평가 완료 후 결과를 읽는다.
-
----
-
-### Step 4: 결과 종합 및 판정
-
-**단일 모델 평가 시:**
+**판정:**
 
 | 결과 | 판정 |
 |------|------|
-| 모든 항목 PASS | **APPROVED** |
-| FAIL이 있지만 경미 | 유저에게 판단 위임 |
-| FAIL 1개 이상 (구조적/의미적 문제) | **NEEDS_REVISION** |
+| accepted FAIL 0개 | **APPROVED** |
+| accepted FAIL 있으나 전부 경미 | 유저에게 판단 위임 |
+| accepted FAIL에 구조적/의미적 문제 | **NEEDS_REVISION** |
 
-**교차검증 시:**
+**교차검증 시**: 두 모델 동시 FAIL → 높은 확신으로 수정 / 한쪽만 FAIL → 양쪽 근거를 함께 제시하고 유저 판단 / 두 모델 PASS → 높은 확신의 APPROVED.
 
-| 결과 | 판정 |
-|------|------|
-| 두 모델 PASS | **APPROVED** (높은 확신) |
-| 두 모델 FAIL | **NEEDS_REVISION** (높은 확신, 반드시 수정) |
-| 한 모델만 FAIL | 유저에게 판단 위임 — 양쪽 근거를 함께 제시 |
+### Step 4: 기록 + 보고
 
----
+게이트 결과를 `eval-results/<mode>-gate-<timestamp>.result.md`로 저장한다 (판정, 상세 결과 파일 경로, accepted 수정 사항, needs_followup). 매니페스트가 있으면 eval 결과 상태를 갱신한다.
 
-### Step 5: 결과 저장 및 보고
+**보고 원칙: 유저가 다른 파일을 열지 않고 판단할 수 있어야 한다.** 각 finding에:
 
-```bash
-GATE_RESULT="$SPEC_DIR/eval-results/[mode]-gate-${TIMESTAMP}.result.md"
-```
+- 무엇에 대한 것인지 (항목 번호가 아니라 내용 설명)
+- 현재 스펙/코드에 뭐라고 쓰여 있는지 (실제 인용)
+- 무엇이 문제이고 어떻게 수정하면 되는지
+- needs_followup이면 선택지 제시
 
-결과 파일 형식:
-```markdown
-# Eval-Gate Result: [mode]
+### Step 5: 다음 단계 안내
 
-## 판정: APPROVED | NEEDS_REVISION
-- 평가일시: YYYY-MM-DD HH:MM
-- 평가 모드: spec | plan | implementation
+**APPROVED**: spec → 📍 `/spec-dev` / plan → 📍 구현 진행 / implementation → 📍 완료 또는 `/review`로 fresh-eyes 리뷰
 
-## 상세 결과 파일
-- claude-eval: [path]
-- codex-eval: [path] (또는 미실행)
+**NEEDS_REVISION**: 어느 단계로 돌아갈지 안내한다 —
 
-## claude-eval 요약
-- PASS: N개, WARN: N개, FAIL: N개
-
-## accepted 수정 사항 (NEEDS_REVISION인 경우)
-1. ...
-
-## needs_followup
-1. ...
-```
-
-타임스탬프 포함이므로 여러 번 실행해도 이전 결과를 덮어쓰지 않는다.
-
----
-
-### Step 6: 유저에게 보고
-
-**보고의 원칙: 유저가 다른 파일을 열지 않고도 판단할 수 있어야 한다.**
-
-각 finding을 보고할 때 다음을 포함한다:
-- **무엇에 대한 것인지** — 항목 번호나 제목만이 아니라, 해당 내용이 무엇을 말하는지 충분히 설명
-- **현재 스펙/코드에 뭐라고 쓰여 있는지** — 실제 문구나 코드를 인용
-- **무엇이 문제인지** — 왜 수정이 필요한지, 어떤 모순/누락이 있는지
-- **어떻게 수정하면 되는지** — 구체적 수정 방향 (accepted의 경우)
-- **유저가 결정할 것** — 어떤 선택지가 있는지 (needs_followup의 경우)
-
----
-
-### Step 7: 다음 단계 안내
-
-**APPROVED 시:**
-
-| 모드 | 다음 단계 |
-|------|----------|
-| spec | 📍 **Next: `/spec-dev docs/specs/[project]/spec.md`로 구현을 시작할 수 있습니다.** |
-| plan | 📍 **Next: 계획이 확정되었습니다. 구현을 진행하세요.** |
-| implementation | 📍 **Done: 구현이 검증되었습니다.** |
-
-**NEEDS_REVISION 시:**
-
-수정 사항과 함께 **어느 단계로 돌아가야 하는지** 안내한다:
-- AC 문제, 구현 상세 부족 → `/spec-designer` Phase 4 (Draft)
-- 요구사항 누락, 모호성 → `/spec-designer` Phase 3 (Clarification)
-- 코드 분석 부족 → `/spec-designer` Phase 2 (Code Analysis)
+- AC 문제, 요구사항 누락·모호 → `/spec-designer`
+- 계획의 영향 범위·순서 문제 → `/spec-dev` 계획 수정
 - 구현 코드 문제 → `/spec-dev`에서 수정
+
+수정 후 재실행하면 타임스탬프로 이력이 보존된다.
 
 ---
 
 ## Notes
 
-- eval-gate는 오케스트레이터이지 직접 평가하지 않는다
+- eval-gate는 오케스트레이터다 — 직접 평가하지 않는다
 - 셀프 게이트는 비용이 없으므로 항상 수행한다
-- 결과 파일은 보존하여 이력 관리에 활용한다
+- evaluator에게 결론을 누설하는 순간 독립 평가의 가치가 사라진다

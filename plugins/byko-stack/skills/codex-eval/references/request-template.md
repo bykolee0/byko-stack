@@ -51,9 +51,9 @@ codex는 sandbox 환경에서 실행되므로 파일 접근이 제한될 수 있
 - spec, plan 모드: 관련 문서 전체를 copy
 - implementation 모드: spec은 copy, 소스 코드는 경로 기재 (codex가 workspace-write sandbox에서 읽을 수 있음)
 
-## 교차검증 시 (기존 claude-eval 파일에 추가)
+## 교차검증 시 (기존 eval 결과 파일에 추가)
 
-기존 claude-eval 파일이 주어진 경우, 기존 Response 아래에 codex 전용 섹션을 추가한다:
+기존 eval 결과 파일(evaluator 결과 등)이 주어진 경우, 기존 Response 아래에 codex 전용 섹션을 추가한다:
 
 ```markdown
 ## Codex Evaluation Response

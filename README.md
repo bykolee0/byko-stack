@@ -79,27 +79,41 @@ Claude Code 세션에서 아래 커맨드로 이 저장소를 마켓플레이스
 
 ### byko-stack
 
-스펙 기반 개발(Spec-Driven Development) 워크플로우를 위한 스킬 모음.
+스펙 기반 개발(Spec-Driven Development) 워크플로우를 위한 스킬 + 서브에이전트 모음.
+
+메인 세션은 오케스트레이터 역할을 한다 — 대화·결정·조율만 메인 컨텍스트에서 수행하고, 코드 분석·독립 평가·병렬 구현은 서브에이전트에 위임한다. 작업 단위마다 `manifest.md`(워크 매니페스트)가 산출물 경로와 단계 상태의 단일 진실 공급원이 되므로, 모든 스킬은 어떤 순서로든 독립 호출이 가능하다. 공유 컨벤션은 `plugins/byko-stack/shared/`를 참고한다.
+
+**스킬**
 
 | 스킬 | 역할 |
 | --- | --- |
-| `spec-designer` | 유저와 대화하며 구현 스펙 문서를 설계·작성한다. |
-| `spec-dev` | 작성된 스펙을 기반으로 실제 구현을 수행하거나 ralph-loop 준비물을 생성한다. |
-| `agent-harness-builder` | 기존/신규 프로젝트를 분석해 에이전트용 문서 구조와 실행 가능한 guardrail을 구축한다. |
-| `claude-eval` | `claude -p`를 사용해 독립된 컨텍스트에서 문서/코드를 평가한다. |
+| `spec-designer` | 유저와 대화하며 구현 스펙을 설계·작성한다. 분석은 code-explorer에 위임. |
+| `spec-dev` | 스펙(또는 합의된 AC)을 기반으로 구현한다. 큰 작업은 implementer 위임 루프로 오케스트레이션. |
+| `eval-gate` | evaluator 서브에이전트로 스펙/계획/구현의 정합성을 독립 검증하는 품질 게이트. |
+| `review` | reviewer 서브에이전트로 문제 정의에서 출발하는 fresh-eyes 리뷰 (방향·컨벤션·성실성). |
 | `codex-eval` | OpenAI Codex CLI로 다른 모델 시각에서 교차 검증한다. |
-| `eval-gate` | `claude-eval`과 `codex-eval`을 오케스트레이션해 스펙/계획/구현의 품질 게이트 역할을 한다. |
+| `agent-harness-builder` | 기존/신규 프로젝트를 분석해 에이전트용 문서 구조와 실행 가능한 guardrail을 구축한다. |
+
+**서브에이전트** (`agents/`)
+
+| 에이전트 | 역할 |
+| --- | --- |
+| `code-explorer` | read-only 코드 분석 전담. 파일:라인 근거가 달린 사실만 보고한다. |
+| `evaluator` | 격리 컨텍스트에서 체크리스트 기반 정합성 평가 (APPROVED/NEEDS_REVISION). |
+| `reviewer` | 문제 정의 기준의 fresh-eyes 리뷰 (SOUND/CONCERNS/RETHINK). |
+| `implementer` | 독립 구현 단위(AC)를 코드 작성→테스트→보고까지 완결한다. |
 
 #### 기본 워크플로우
 
 ```
-/spec-designer   →  스펙 작성
-/eval-gate spec  →  스펙 품질 검증
-/spec-dev        →  구현
-/eval-gate implementation  →  구현 결과 검증
+/spec-designer             →  스펙 작성 (+ manifest 생성)
+/eval-gate spec            →  스펙 정합성 검증
+/spec-dev                  →  구현 (전략 A/B/C)
+/eval-gate implementation  →  구현 정합성 검증
+/review                    →  문제 정의 관점 fresh-eyes 리뷰
 ```
 
-각 스킬의 세부 사용법은 해당 스킬 디렉토리의 `SKILL.md`를 참고한다.
+순서는 강제되지 않는다 — 문답만으로 `/spec-dev`를 바로 호출하거나, 임의 문서에 `/eval-gate custom`만 돌리는 것도 가능하다. 각 스킬의 세부 사용법은 해당 스킬 디렉토리의 `SKILL.md`를 참고한다.
 
 ## 신규 플러그인 추가
 
