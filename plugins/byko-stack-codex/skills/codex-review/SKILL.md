@@ -1,108 +1,153 @@
 ---
 name: codex-review
-description: Codex 내부에서 스펙, 계획, 구현 결과를 독립적으로 검토하는 리뷰 스킬. codex-eval-gate가 외부 codex CLI 대신 호출하거나, 사용자가 "Codex subagent로 리뷰", "스펙 검토", "구현 독립 검증", "plan review"를 요청할 때 사용한다. 반드시 subagent 별도 컨텍스트에서 평가하며, 현재 세션 리뷰로 대체하지 않는다.
+description: 문제 정의에서 출발하는 Codex fresh-eyes 리뷰 스킬. 스펙이나 구현이 (1) 애초의 문제에 맞는 답인지, (2) 현재 코드베이스 컨벤션과 구조를 제대로 반영했는지, (3) 기능만 되게 때운 구현이 아닌지, (4) 확장성과 유지보수성을 해치지 않는지 별도 subagent 컨텍스트로 검토한다. "$byko-stack-codex:codex-review spec ...", "$byko-stack-codex:codex-review implementation ...", "리뷰해줘", "이 방향이 맞는지 봐줘", "제대로 구현됐는지 검토해줘" 요청에서 사용한다. eval-gate와 달리 기준점은 스펙 준수가 아니라 manifest의 원본 문제 정의다.
 ---
 
 # Codex Review
 
-외부 `codex exec`를 재귀 호출하지 않고 Codex 환경 안에서 독립 검토를 수행한다. 핵심은 현재 작업자의 결론을 그대로 믿지 않고, subagent 별도 컨텍스트가 파일과 코드 근거만으로 다시 판단하게 하는 것이다.
+산출물을 문제 정의에서 다시 본다. `codex-eval-gate`가 "상위 산출물/코드베이스와 정합한가"를 본다면, 이 스킬은 "맞는 문제를 성실하고 코드베이스에 어울리게 풀었는가"를 본다.
 
-현재 세션에서 평가 본문을 수행하지 않는다. 현재 세션은 요청 파일 작성, subagent 실행 오케스트레이션, subagent 결과의 근거 재확인, 결과 보고만 담당한다.
+먼저 `../../shared/workflow.md`를 읽고 따른다.
+
+## Rules
+
+- Do not use the current session's implementation narrative as evidence.
+- Use an isolated reviewer when current Codex policy permits subagents.
+- If isolated review cannot run, return `BLOCKED`; do not replace it with same-context approval.
+- The review anchor is manifest `Problem Definition`, not the final spec summary.
+- Recheck reviewer concerns before accepting or rejecting them.
+
+## Modes
+
+```text
+$byko-stack-codex:codex-review spec <manifest-or-spec>
+$byko-stack-codex:codex-review implementation <manifest-or-spec> [changed paths]
+$byko-stack-codex:codex-review custom <target files>
+```
+
+If mode is omitted, infer it from target paths and manifest state.
 
 ## Workflow
 
-### 1. 입력 파악
+### 1. Resolve target and problem definition
 
-지원 모드:
-- `spec`
-- `plan`
-- `implementation`
-- `custom`
+Resolve target by explicit path, manifest, or user confirmation.
 
-출력 경로가 없으면 다음을 사용한다.
+Problem definition priority:
 
-```text
-docs/specs/<project>/eval-results/<mode>-codex-review-<timestamp>.md
-```
+1. manifest `Problem Definition`
+2. original user request from the current conversation, summarized in 2-5 lines and confirmed if it changes the review basis
+3. `BLOCKED` if no reliable problem definition exists
 
-프로젝트 경로를 추론할 수 없으면 `.myagents/codex-review-<timestamp>.md`를 사용한다.
+Do not substitute a spec goal list for the original problem. A flawed spec must be reviewable as flawed.
 
-### 2. 요청 파일 작성
+### 2. Prepare review request
 
-`references/request-template.md`와 `references/checklists.md`를 사용한다.
+Use:
 
-요청 파일에는 다음을 포함한다.
-- 평가 모드
-- 대상 파일 목록
-- 모드별 체크리스트
-- spec/plan/traceability/ledger 문서 내용 복사
-- implementation 모드에서는 변경 파일 경로와 테스트 결과
+- `references/review-request-template.md`
+- `references/review-checklist.md`
 
-문서 전체를 복사하면 subagent가 파일 접근에 실패해도 평가할 수 있다. 단, 구현 평가는 실제 코드도 읽어야 하므로 변경 파일 경로를 함께 적는다.
-
-### 3. 리뷰 실행
-
-subagent를 사용한다. 프롬프트는 기대 결론을 누설하지 말고 다음처럼 최소화한다.
+Save under:
 
 ```text
-Use the evaluation request at <absolute request path>.
-Read the target files listed in it.
-Evaluate according to the checklist.
-Write the result into the response marker in the same file.
-Base every FAIL on concrete file/code evidence.
+<work-dir>/review-results/<mode>-codex-review-<timestamp>.request.md
 ```
 
-subagent 사용이 tool policy상 명시 허가를 요구하면 사용자에게 허가를 요청한다. 허가를 받지 못했거나 도구가 없으면 리뷰를 진행하지 않는다. 같은 컨텍스트 평가로 대체하지 않는다.
+Include:
 
-### 4. 리뷰 결과 검증
+- problem definition
+- target artifact paths
+- spec/plan/traceability/manifest content where practical
+- changed code paths for implementation review
+- review checklist
 
-subagent 결과를 그대로 믿지 않는다. FAIL 항목을 현재 세션에서 직접 확인하고 분류한다. 이 확인은 평가 본문이 아니라 subagent finding의 근거 검증이다.
+Do not include eval verdicts, current-session confidence, or "known good" framing.
 
-- `accepted`: 근거가 타당하고 수정 필요
-- `rejected`: 오탐 또는 맥락 부족
-- `needs_followup`: 타당할 수 있으나 사용자 결정이 필요
+### 3. Run isolated reviewer
 
-검증 결과를 Caller Notes에 기록한다.
+If multi-agent tools are not loaded, use `tool_search` for multi-agent/subagent tools. When available and allowed by current Codex policy, spawn a reviewer with a minimal prompt:
 
-### 5. 출력 형식
+```text
+Use the review request at <absolute request path>.
+Start from the Problem Definition before reading the proposed solution.
+Inspect target artifacts and relevant codebase conventions.
+Judge whether this is the right, durable solution to the original problem.
+Return SOUND, CONCERNS, RETHINK, or BLOCKED with concrete evidence.
+```
+
+If subagent execution is unavailable or not permitted, write a `BLOCKED` review result and explain that same-context review would not satisfy this skill.
+
+### 4. Recheck concerns
+
+Classify reviewer findings:
+
+- `accepted`: concrete evidence is valid and action is needed
+- `rejected`: false positive or contradicted by code/docs
+- `needs_followup`: plausible concern but user/product decision needed
+
+Verdict handling:
+
+| Reviewer verdict | Meaning | Main-session action |
+|------------------|---------|---------------------|
+| `SOUND` | right problem, durable solution | update manifest and suggest next stage |
+| `CONCERNS` | direction is right but material issues exist | route accepted items to spec/dev work |
+| `RETHINK` | wrong problem or wrong approach | present evidence and route to spec redesign unless user rejects |
+| `BLOCKED` | review basis or isolated context missing | report missing input/tool condition |
+
+### 5. Write result and update manifest
+
+Save:
+
+```text
+<work-dir>/review-results/<mode>-review-<timestamp>.result.md
+```
+
+Result shape:
 
 ```markdown
-# Codex Review Result: <mode>
+# Review Result: <mode>
 
-## 판정: APPROVED | NEEDS_REVISION | BLOCKED
-- confidence: high | medium
-- evaluation_context: codex-subagent
+## Verdict: SOUND | CONCERNS | RETHINK | BLOCKED
+- confidence: high | medium | low
+- review_context: codex-subagent | none
+- problem_definition_source: manifest | conversation | missing
 
-## Findings
-### Accepted
-- ...
+## Accepted Concerns
+...
 
-### Rejected
-- ...
+## Rejected Concerns
+...
 
-### Needs Follow-up
-- ...
+## Needs Follow-up
+...
 
-## Checklist Result
-### <section>
-- [PASS|FAIL|WARN] <item> - <근거>
-
-## Caller Notes
-- ...
+## Next Step
+...
 ```
 
-사용자에게는 핵심 finding, 판정, 결과 파일 경로, 다음 단계를 보고한다.
+Update manifest review status when available.
 
-## Review Rules
+### 6. Report
 
-- 문서만 보고 판단하지 않는다. 코드베이스 주장과 실제 코드를 대조한다.
-- 구현 평가는 스펙 준수, 로직 정확성, 엣지케이스, 실패 경로, 회귀 위험을 모두 본다.
-- 개선 제안은 완전성/정확성/안전성을 높이는 경우에만 한다.
-- 취향, 네이밍 선호, 범위 확장 제안은 제외한다.
-- FAIL 전에는 관련 파일을 다시 읽어 false positive를 줄인다.
-- subagent 평가가 없으면 APPROVED를 내지 않는다.
+Report enough for the user to decide without opening files:
+
+- verdict and confidence
+- review anchor used
+- accepted concerns with evidence and fix direction
+- rejected concerns only when useful
+- result file path
+- next step
+
+Next steps:
+
+- `SOUND` spec: `codex-eval-gate spec` for consistency or `codex-spec-dev`
+- `SOUND` implementation: complete, or run `codex-eval-gate implementation` if consistency gate has not run
+- `CONCERNS`: return to `codex-spec-designer` or `codex-spec-dev`
+- `RETHINK`: return to `codex-spec-designer` with the original problem definition
 
 ## References
 
-- `references/checklists.md`
-- `references/request-template.md`
+- `../../shared/workflow.md`
+- `references/review-checklist.md`
+- `references/review-request-template.md`

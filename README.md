@@ -71,7 +71,9 @@ Claude Code 세션에서 아래 커맨드로 이 저장소를 마켓플레이스
 
 - 마켓플레이스 메타데이터: `.agents/plugins/marketplace.json`
 - 플러그인 매니페스트: `plugins/byko-stack/.codex-plugin/plugin.json`
+- Codex 전용 포팅 매니페스트: `plugins/byko-stack-codex/.codex-plugin/plugin.json`
 - 스킬 디렉토리: `plugins/byko-stack/skills/`
+- Codex 전용 스킬 디렉토리: `plugins/byko-stack-codex/skills/`
 
 로컬에서 사용할 때는 Codex가 이 저장소의 `.agents/plugins/marketplace.json`을 읽을 수 있는 위치에 두거나, Codex 환경의 플러그인 마켓플레이스 설정에서 이 저장소를 로컬 마켓플레이스로 등록한다.
 
@@ -114,6 +116,23 @@ Claude Code 세션에서 아래 커맨드로 이 저장소를 마켓플레이스
 ```
 
 순서는 강제되지 않는다 — 문답만으로 `/spec-dev`를 바로 호출하거나, 임의 문서에 `/eval-gate custom`만 돌리는 것도 가능하다. 각 스킬의 세부 사용법은 해당 스킬 디렉토리의 `SKILL.md`를 참고한다.
+
+### byko-stack-codex
+
+Codex 실행 모델에 맞춘 byko-stack 포팅이다. Claude Code의 플러그인 서브에이전트 구조를 그대로 복제하지 않고, Codex의 main session을 오케스트레이터로 두며 `manifest.md`와 파일 기반 산출물로 스킬 간 상태를 공유한다.
+
+**핵심 차이**
+
+| 영역 | Codex 포팅 방향 |
+| --- | --- |
+| 상태 공유 | `docs/specs/<project>/manifest.md`가 문제 정의, 산출물, 단계 상태, 핵심 결정을 기록한다. |
+| 질문 정책 | 코드/문서로 확인 가능한 것은 직접 조사하고, 유저 결정이 필요한 경우에만 선택지+추천으로 묻는다. |
+| eval | `codex-eval-gate`가 스펙/계획/구현의 정합성을 격리 컨텍스트에서 검증한다. |
+| review | `codex-review`가 manifest의 원본 문제 정의를 기준으로 fresh-eyes 리뷰를 수행한다. |
+| 구현 | `codex-spec-dev`가 스펙이 없어도 합의된 요구와 AC로 경량 매니페스트를 만들고 구현까지 진행한다. |
+| 교차검증 | `codex-claude-eval`은 기본 평가가 아니라 Claude CLI 기반 선택 교차검증이다. |
+
+Codex 공유 규약은 `plugins/byko-stack-codex/shared/`에 있다.
 
 ## 신규 플러그인 추가
 

@@ -1,4 +1,4 @@
 interface:
   display_name: "Codex Review"
-  short_description: "Codex subagent 기반 독립 리뷰."
-  default_prompt: "Use $codex-review to independently review these artifacts."
+  short_description: "문제 정의 기준 fresh-eyes 리뷰."
+  default_prompt: "Use $codex-review to review this artifact against the original problem definition."

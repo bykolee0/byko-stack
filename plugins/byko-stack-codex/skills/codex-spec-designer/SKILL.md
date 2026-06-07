@@ -1,105 +1,138 @@
 ---
 name: codex-spec-designer
-description: Codex에 최적화된 구현 스펙 작성 스킬. 사용자의 기능 개발, 변경 설계, 구현 명세, "스펙 작성", "설계 문서", "spec 만들어줘", "기능 설계", "구현 전에 정리" 요청에서 사용한다. 코드베이스를 먼저 분석하고, 모호성을 ledger로 추적하며, 완료 가능한 spec.md와 ambiguity-ledger.md를 작성한 뒤 eval-gate 또는 구현으로 이어지는 다음 단계를 명확히 안내한다. 기존 byko-stack의 spec-designer를 Codex 실행 방식에 맞게 대체할 때 사용한다.
+description: Codex에 최적화된 구현 스펙 작성 스킬. 사용자의 기능 개발, 변경 설계, 구현 명세, "스펙 작성", "설계 문서", "spec 만들어줘", "기능 설계", "구현 전에 정리" 요청에서 사용한다. 코드베이스를 먼저 분석하고, 질문은 조사 기반 선택지로 제한하며, manifest.md를 중심으로 spec/ledger/analysis 산출물을 작성한 뒤 eval-gate, review, 구현으로 이어지는 다음 단계를 제안한다.
 ---
 
 # Codex Spec Designer
 
-목표는 구현자가 추가 맥락 없이 작업을 시작할 수 있는 스펙을 완성하는 것이다. Codex에서는 사용자가 현재 상태를 놓치기 쉬우므로, 매 응답에 현재 단계, 완료 여부, 다음 행동을 분명히 적는다.
+구현자가 추가 맥락 없이 시작할 수 있는 스펙과, 다른 스킬이 이어받을 수 있는 작업 매니페스트를 만든다. 먼저 `../../shared/workflow.md`와 `../../shared/question-policy.md`를 읽고 따른다.
 
-## Codex 진행 원칙
+## Purpose
 
-- 먼저 코드를 읽고, 코드로 확인 가능한 질문은 사용자에게 묻기 전에 직접 확인한다.
-- 질문은 blocking 결정에만 사용한다. 코드 탐색으로 해소 가능한 내용은 직접 해소하고 근거를 남긴다.
-- 산출물을 만들기 전에는 무엇을 만들고 있는지 짧게 알린다.
-- 중간에 멈춰야 하면 "아직 완료 아님", "필요한 답변", "답변 후 재개 위치"를 명시한다.
-- 스펙 완료 시에는 `docs/specs/<project>/spec.md`, `ambiguity-ledger.md`, 필요한 보조 문서 경로와 다음 단계 명령을 반드시 알려준다.
+- Main session stays as orchestrator: decisions, concise summaries, artifact writing, and handoff.
+- Codebase facts are discovered before questions are asked.
+- Work state is shared through `manifest.md`, not through fixed filenames alone.
+- Review needs the original problem, so write a clear manifest `Problem Definition` before the spec solution hardens.
 
 ## Workflow
 
-### 1. 요청 해석과 초기 코드 탐색
+### 1. Resolve work directory
 
-요청이 충분히 구체적이면 관련 파일을 `rg`, `rg --files`, `sed`, `git grep` 등으로 먼저 찾는다.
+Use the shared target resolution order:
 
-확인할 것:
-- 기존 구현, 유사 패턴, 컨벤션
-- 관련 테스트와 fixture
-- 변경 지점의 호출자/피호출자
-- 데이터 모델, API, 권한, 실패 처리, 관측성 단서
+1. explicit user path or project name
+2. existing `docs/specs/*/manifest.md`
+3. new `docs/specs/<project-name>/manifest.md`
 
-요청이 너무 넓어 탐색 범위를 정할 수 없으면, 범위를 좁히는 질문을 1-3개만 한다.
-
-### 2. 모호성 분류
-
-`references/question-routing.md`를 사용해 질문을 분류한다.
-
-- Type A: 코드에서 확인 가능하면 직접 확인하고 근거만 제시한다.
-- Type B: 제품/정책/우선순위처럼 사용자만 결정 가능하면 질문한다.
-- Type C: 코드 사실은 직접 확인하고 판단 부분만 질문한다.
-- Type D: 판단이 필요한데 정보가 없으면 추측하지 말고 질문한다.
-
-스펙을 쓰기 전까지 13개 항목의 상태를 추적한다. 상세 기준은 `references/ambiguity-ledger.md`를 읽는다.
-
-### 3. 심층 분석
-
-요청 지점만 보지 말고 같은 개념이 쓰이는 곳까지 추적한다.
-
-- 함수명뿐 아니라 필드명, 에러 코드, 도메인 용어로 검색한다.
-- 엔티티의 일부 연산에서 패턴을 발견하면 나머지 CRUD/상태 전이도 확인한다.
-- 테스트와 운영 영향까지 확인한다.
-- 분석 범위가 넓고 현재 환경에서 subagent 사용이 허용되면 독립 영역별로 위임한다. 허용되지 않으면 직접 분석하고 범위 제한을 기록한다.
-
-분석 결과는 `docs/specs/<project>/codebase-analysis.md`에 저장하거나 스펙의 "현행 분석" 섹션에 충분히 남긴다.
-
-### 4. Ledger와 Spec 작성
-
-정보가 충분하면 다음 파일을 만든다.
+If creating a new work directory, choose a short stable project name from the request and create:
 
 ```text
 docs/specs/<project>/
+├── manifest.md
 ├── spec.md
 ├── ambiguity-ledger.md
-└── codebase-analysis.md
+└── analysis/
 ```
 
-Ledger 게이트:
-- `blocking`: 0개
-- `assumed`: 2개 이하
-- `open`: 3개 이하
-- 각 상태는 사용자 확인 또는 파일:라인 근거를 가진다.
+If the request is too broad to choose a project name or target area, ask 1-3 narrowing questions. Otherwise proceed.
 
-`references/spec-templates.md`를 사용해 `spec.md`를 작성한다. 필수 포함:
-- 목표와 비목표
-- 현행 분석 요약과 근거 파일
-- 요구사항과 도메인 규칙
-- 구현 상세
-- 실패/예외 처리
-- Acceptance Criteria 테이블
-- 테스트 전략
-- 구현 순서
-- 남은 결정 사항
+### 2. Investigate before asking
 
-AC는 반드시 검증 가능해야 한다. 각 AC에는 검증 방법을 붙인다.
+Search with `rg`, `rg --files`, `git grep`, and focused file reads. Confirm:
 
-### 5. 완료 보고
+- existing implementation and analogous patterns
+- relevant tests, fixtures, and commands
+- callers/callees and shared data structures
+- error handling, auth, persistence, migration, logging, and observability patterns
+- project conventions that affect the requested change
 
-스펙이 완성되면 다음 형식으로 보고한다.
+For broad analysis, use subagents only when the current Codex tool policy permits it. If multi-agent tools are not visible and delegation is allowed by the user's request/current policy, discover them with `tool_search`. Save detailed findings under `analysis/<topic>.md`; keep the main context to conclusions and file paths.
+
+### 3. Apply the question policy
+
+Use `../../shared/question-policy.md`.
+
+Classify every ambiguity into:
+
+- `from-code`: resolved by code/docs with file:line evidence
+- `confirmed`: answered by the user or existing artifact
+- `assumed`: adopted recommendation with basis and alternatives
+- `open`: non-blocking unknown
+- `blocking`: user decision required before a valid spec exists
+
+Ask only for blocking decisions. Questions must include 2-3 options, a recommendation, and a tradeoff. Never ask for codebase facts that can be searched.
+
+Maintain the ambiguity gate:
+
+- `blocking`: 0 before final spec
+- `assumed`: 2 or fewer
+- `open`: 3 or fewer
+
+Use `references/ambiguity-ledger.md` for the ledger shape.
+
+### 4. Write artifacts
+
+Update or create `manifest.md` first:
+
+- `Problem Definition`: 2-5 lines describing the original problem, not the chosen solution
+- `Artifacts`: relative paths and current status
+- `Key Decisions`: only durable decisions with basis
+- `Open Items`: blocking/open/assumed items
+
+Write:
+
+- `spec.md` using `references/spec-templates.md`
+- `ambiguity-ledger.md`
+- `analysis/<topic>.md` for substantial codebase findings
+
+The spec must include:
+
+- goals and non-goals
+- current-state analysis with file:line evidence
+- requirements and domain rules
+- implementation guidance matched to current code conventions
+- failure/edge cases
+- acceptance criteria with verification method for every AC
+- test strategy
+- implementation order
+- remaining non-blocking decisions
+
+Do not mark assumptions as confirmed. Do not let `[TBD]` affect implementation direction, public API, data model, security, migration, or AC meaning.
+
+### 5. Self-check before completion
+
+Before saying the spec is complete, verify:
+
+- manifest exists and references the spec/ledger/analysis artifacts
+- ledger gate passes
+- every AC is testable and has a verification method
+- codebase claims cite concrete files
+- the spec can be implemented without hidden product or architecture decisions
+
+If the gate fails, report "not complete", list the blocking decisions, and give the resume point.
+
+### 6. Handoff
+
+Finish with enough context that the user does not need to open files:
 
 ```markdown
 스펙 초안을 완료했습니다.
+- manifest: docs/specs/<project>/manifest.md
 - spec: docs/specs/<project>/spec.md
 - ledger: docs/specs/<project>/ambiguity-ledger.md
-- gate 상태: blocking 0, assumed N, open N
+- gate: blocking 0, assumed N, open N
 
 다음 단계:
-1. `$byko-stack-codex:codex-eval-gate spec docs/specs/<project>/spec.md`로 독립 검증
-2. 검증을 건너뛰려면 `$byko-stack-codex:codex-spec-dev docs/specs/<project>/spec.md`로 구현 시작
+1. `$byko-stack-codex:codex-eval-gate spec docs/specs/<project>/manifest.md`
+2. `$byko-stack-codex:codex-review spec docs/specs/<project>/manifest.md`
+3. `$byko-stack-codex:codex-spec-dev docs/specs/<project>/manifest.md`
 ```
 
-완료 전이면 완료라고 말하지 않는다. 사용자 답변이 필요한 경우 다음 질문과 재개 지점을 남긴다.
+Suggest only the most relevant one or two next steps unless the user asked for the full cycle.
 
 ## References
 
+- `../../shared/workflow.md`
+- `../../shared/question-policy.md`
 - `references/ambiguity-ledger.md`
-- `references/question-routing.md`
 - `references/spec-templates.md`
