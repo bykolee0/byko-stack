@@ -7,6 +7,10 @@
     {
       "name": "byko-stack",
       "source": "./plugins/byko-stack"
+    },
+    {
+      "name": "byko-goal",
+      "source": "./plugins/byko-goal"
     }
   ]
 }

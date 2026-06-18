@@ -8,7 +8,7 @@
  :: byko-plugins ::                                          (Claude Code/Codex)
 ```
 
-> A minimalist harness that runs on skills alone — no extra framework required.
+> A minimalist harness that runs on skills and subagents — no extra framework required.
 
 > Korean version: [README.md](./README.md)
 
@@ -16,21 +16,23 @@
 
 ```
 byko-plugins/
-├── .agents/
-│   └── plugins/
-│       └── marketplace.json # Codex marketplace metadata and plugin list
-├── .claude-plugin/
-│   └── marketplace.json     # Claude Code marketplace metadata and plugin list
+├── .agents/plugins/marketplace.json   # Codex marketplace (plugin list)
+├── .claude-plugin/marketplace.json    # Claude Code marketplace (plugin list)
 ├── plugins/
-│   ├── byko-stack/          # Claude Code-oriented plugin
-│   │   ├── .codex-plugin/   # Codex-compatible manifest
-│   │   ├── .claude-plugin/  # Claude Code plugin manifest
-│   │   └── skills/          # Skills bundled in the plugin
-│   └── byko-stack-codex/    # Codex-native port
-│       ├── .codex-plugin/
-│       ├── shared/
-│       └── skills/
+│   ├── byko-stack/        # Spec-driven development (SDD) workflow for Claude Code (skills + agents)
+│   ├── byko-stack-codex/  # Codex-native port of the above
+│   └── byko-goal/         # Autonomously completes long goals across repeated sessions
 └── README.md
+```
+
+Internal structure of each plugin (only the parts that apply):
+
+```
+plugins/<plugin>/
+├── .claude-plugin/plugin.json   # Claude Code manifest (Codex: .codex-plugin/plugin.json)
+├── skills/                       # Skills (each <skill>/SKILL.md)
+├── agents/                       # Subagent definitions
+└── shared/                       # Cross-skill conventions and templates
 ```
 
 ## Installation
@@ -122,6 +124,37 @@ A Codex-native port of the byko-stack development cycle. It keeps the main Codex
 | Cross-check | `codex-claude-eval` is optional Claude CLI cross-validation, not the default gate. |
 
 Codex shared conventions live in `plugins/byko-stack-codex/shared/`.
+
+### byko-goal
+
+A workflow that autonomously completes long-running goals across **repeated fresh sessions**. It breaks a goal too large for one session into session-sized checklist items and completes them one at a time. Domain-agnostic — code, writing, planning, research; the "done" criteria are defined as data in the goal's documents, not hardcoded.
+
+The core is a split between a **driver (long-lived, lightweight) / worker (disposable, heavy) / disk state**. The long-lived driver never does the work itself — it spawns one worker per task and receives a single-line result, so it never bloats. Each disposable worker finishes implementation, evaluation, and revision inside its own context, then dies. The only memory is the documents under `docs/goals/<slug>/`, so progress survives context compaction and session termination losslessly.
+
+**Skills**
+
+| Skill | Role |
+| --- | --- |
+| `goal-design` | Designs a long goal with the user and produces the document set (goal.md, run-state.md, knowledge.md). Decomposes the goal into session-sized tasks and sets completion conditions and caps (iterations/time). |
+| `goal-run` | The fire-and-forget driver. Spawns a worker per task until the checklist is complete or a cap is hit. Re-reads disk each iteration for lossless resume. |
+
+**Subagents** (`agents/`)
+
+| Subagent | Role |
+| --- | --- |
+| `worker` | A disposable executor that completes one task end to end. Writes the completion conditions, does the work, and gets independent verification from the evaluator, revising until it passes. Fans out to explorer/sub-workers for large tasks. |
+| `evaluator` | Independently verifies a task's completion conditions in an isolated context. Distrusts the caller's claims; judges PASS/FAIL against the on-disk source of truth and direct inspection. |
+| `explorer` | Read-only investigation (code analysis, web research). Reports only evidence-backed facts. |
+
+#### Default workflow
+
+```
+/goal-design               →  design the goal + decompose tasks (creates docs/goals/<slug>/)
+claude --dangerously-skip-permissions   →  switch to a prompt-free session
+/goal-run <slug>           →  autonomous run (repeats until done or cap; re-invoke to resume)
+```
+
+Autonomous runs assume a prompt-free (auto-approval) session — `goal-design` ends by guiding the recommended permission setup and the launch command. Shared conventions live in `plugins/byko-goal/shared/`. (Codex port: later.)
 
 ## Adding a new plugin
 
