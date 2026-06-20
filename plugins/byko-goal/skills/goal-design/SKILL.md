@@ -59,12 +59,14 @@ argument-hint: "[목표 한 줄 또는 기존 goal-slug]"
 
 이건 유저만 정할 수 있다(비용/시간 통제). 짧게 묻고 추천값을 제시한다.
 
+회귀·재계획 노브는 기본값으로 두되 유저가 원하면 조정한다 — `checkpoint_every`(기본 4 task: auditor가 회귀·드리프트를 점검하는 주기), `major_changes_budget`(기본 3: auditor의 파괴적 체크리스트 변경 허용 횟수). 둘 다 run-state.md에 기록한다.
+
 ### Step 5: 문서 세트 생성
 `docs/goals/<slug>/`에 생성한다(`templates.md` 따름). `<slug>`는 목표를 요약한 kebab-case:
 1. **goal.md** — 목표, 완수조건(공통+최종), 공통 컨텍스트, 마스터 체크리스트(수용 힌트 포함), 인덱스
-2. **run-state.md** — 캡(Step 4 입력값), 카운터 0, task 상태표
+2. **run-state.md** — 캡·노브(Step 4의 max_*, checkpoint_every, major_changes_budget), 카운터 0, task 상태표, 빈 산출물 소유 맵
 3. **knowledge.md** — 도메인에 맞게 시드한 섹션(코드면 아키텍처/컨벤션/함정, 집필이면 확정사실/출처/용어/톤 등). 내용은 비워두되 골격을 깔아 첫 worker가 채우기 쉽게.
-4. `tasks/`, `handoffs/`, `eval/` 빈 디렉토리
+4. `tasks/`, `handoffs/`, `eval/`, `audit/` 빈 디렉토리
 
 유저에게 보여줄 때: 마스터 체크리스트 + 완수조건 + **"자체 결정한 사항(assumed)"** 목록 — 한 번에 훑고 이의만 제기하도록.
 

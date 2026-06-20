@@ -5,11 +5,12 @@
 ```
 docs/goals/<slug>/
 ├── goal.md          # 헌장: 목표·완수조건·공통 컨텍스트·마스터 체크리스트·인덱스 (의미 상태 SSOT)
-├── run-state.md     # 캡·카운터·task 상태 (기계 상태 SSOT, 드라이버가 매 반복 갱신)
+├── run-state.md     # 캡·카운터·task 상태·산출물 소유 맵 (기계 상태 SSOT)
 ├── knowledge.md     # 누적 분석 (worker가 갱신, 재분석 방지)
 ├── tasks/NN.md            # task별 완료조건 (worker 작성, evaluator 검증)
 ├── handoffs/NN.md         # 다음 세션 핸드오프
-└── eval/NN-<ts>.md        # evaluator 독립 판정 (재시도마다 1개 → ts로 구분)
+├── eval/NN-<ts>.md        # evaluator 독립 판정 (재시도마다 1개 → ts로 구분)
+└── audit/NN-<ts>.md       # auditor 체크포인트 분석 (회귀·체크리스트 재검증)
 ```
 
 **의미 상태(goal.md) ↔ 기계 상태(run-state.md) 분리**가 핵심이다. 둘 다 디스크라 compaction·세션 종료에도 무손실이고, 인간은 goal.md 하나만 봐도 현황을 읽는다.
@@ -49,9 +50,10 @@ docs/goals/<slug>/
 - 런타임 상태: run-state.md · 누적 지식: knowledge.md
 - 완료조건: tasks/ · 핸드오프: handoffs/ · 평가: eval/
 
-## 발견된 변경 제안 (append-only)
-<세션이 마스터 계획의 결함·누락을 발견하면 제안만 적는다.
- 구조적 재계획은 사람 확인을 거친다 — 세션이 마음대로 계획을 갈아엎지 않는다.>
+## 변경 이력 / 제안 (append-only)
+<목표·완수조건은 고정 — 여기서 바꾸지 않는다(사람/goal-design만). 마스터 체크리스트는 가변 경로:
+ auditor가 적용한 변경(추가/분할/정제)을 한 줄씩 남기고, 파괴적 변경(삭제/재범위)은 `major`로 표시한다.
+ worker/세션이 발견한 결함은 제안으로 적고 auditor·사람이 처리한다.>
 ```
 
 마스터 체크리스트 작성이 가장 중요하다 — **각 항목 하나가 한 세션의 목표**다. 너무 크면 한 worker 컨텍스트에 안 들어오고, 너무 잘면 세션 오버헤드가 커진다. 크기 기준은 `goal-design/references/task-sizing.md`.
@@ -65,21 +67,30 @@ docs/goals/<slug>/
 
 > 드라이버가 매 반복 read→write. 기계 상태 SSOT. 캡은 컨텍스트가 아니라 여기 살아야 한다.
 
-## 캡 (방어막)
+## 캡·노브 (방어막)
 - max_iterations: <N>
 - max_minutes: <M>
 - per_task_attempt_limit: 3
+- checkpoint_every: 4          # auditor 체크포인트 주기 (task 수)
+- major_changes_budget: 3      # 파괴적 체크리스트 변경 허용 횟수
 - started_at: <설정/첫 실행 시각>
 
 ## 카운터
 - iterations_used: 0
 - elapsed_minutes: 0
-- current_task: —   # 진행중 task ID (크래시 복구용)
+- current_task: —              # 진행중 task ID (크래시 복구용)
+- done_since_checkpoint: 0     # 마지막 체크포인트 이후 완료 task 수 (≥ checkpoint_every → auditor)
+- major_changes_used: 0        # 누적 파괴적 변경 (≥ budget → 정지)
 
 ## task 상태
 | task | 상태 | 시도 | 마지막 결과 한 줄 |
 |------|------|------|------------------|
 | 01 | pending | 0 | — |
+
+## 산출물 소유 맵 (표적 회귀의 근거 — worker가 완료 시 갱신)
+| 산출물 | 소유 task | 비고 |
+|--------|----------|------|
+| <경로> | 01 | <단독/공유> |
 
 ## BLOCKED 사유 로그 (패턴 감지)
 <드라이버가 정규화 사유를 한 줄씩 누적. 같은 사유 K회 → 사람 호출>
@@ -160,4 +171,31 @@ knowledge는 무한정 자라면 매 worker의 컨텍스트를 잠식한다. 항
 
 ## 판정: APPROVED | NEEDS_REVISION
 <NEEDS_REVISION이면 무엇을 어떻게 고쳐야 하는지 구체적으로>
+```
+
+---
+
+## audit/NN-<ts>.md
+
+> auditor가 체크포인트마다 Write. 상세는 여기 남기고 드라이버엔 concise 델타만 반환한다. NN = 체크포인트 시점의 마지막 완료 task — *언제* 감사했는지를 가리키는 순번이지, 발견 대상 task가 아니다.
+
+```markdown
+# Audit — checkpoint @ task NN — <ts>
+
+> 범위: 지난 체크포인트(task MM) 이후 델타. 목표·완수조건은 평가 대상이 아니다(고정 계약).
+
+## B 전역 회귀
+- [OK|REGRESSED] task KK — <근거: 어떤 산출물이 어느 task에 의해 깨졌나 / 실측 인용>
+재오픈 권고: <task 목록 + 한 줄 사유>  (없으면 "없음")
+
+## C 체크리스트 재검증
+남은 task가 knowledge·산출물에 비춰 타당한가: <요약>
+변경 권고:
+- [추가|분할|정제] <task> — <무엇/왜>             (자율 적용)
+- [삭제|재범위|순서] <task> — <무엇/왜> · major    (예산 차감)
+(없으면 "없음")
+
+## 드라이버 델타 (concise — 이것만 반환)
+- 재오픈: <task 목록 또는 없음>
+- 체크리스트: <변경 목록 또는 없음> · major <n>건
 ```

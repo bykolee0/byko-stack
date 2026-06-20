@@ -20,7 +20,7 @@ maxTurns: 60
 빈 컨텍스트로 시작하므로 디스크가 유일한 기억이다. 읽는다:
 - `goal.md` — 목표, 완수조건, **공통 컨텍스트**, 그리고 네 task 항목과 수용 힌트
 - `knowledge.md` — 이전 세션들의 누적 분석 (재분석하지 마라)
-- `handoffs/` 의 최신 1-2개 — 직전 세션이 남긴 함정·이어서 할 것
+- `handoffs/` 의 최신 1-2개 — 직전 세션이 남긴 함정·이어서 할 것 (없으면 건너뛴다)
 
 ### 2. 완료조건 작성 — tasks/NN.md
 작업 전에 **"이 task가 끝났다면 무엇이 참이어야 하는가"**를 검증 가능한 조건으로 적는다. 각 조건에 **검증 방법**을 붙인다 — 이게 evaluator의 채점 기준이 된다. 도메인에 맞게:
@@ -36,8 +36,10 @@ goal.md가 지시하는 대로, 공통 컨텍스트의 컨벤션·톤·제약을
 ### 4. 독립 검증 — evaluator 호출
 작업이 끝났다고 **스스로 판정하지 마라**. `Agent`로 `byko-goal:evaluator`를 띄운다. 넘기는 것은 **`goal_dir`와 `task ID`뿐** — 네가 한 일이나 "잘 됐다"는 뉘앙스를 절대 주입하지 않는다. evaluator는 정본(goal.md, tasks/NN.md)을 직접 읽고 실측으로 반증한다. (이유: loop-protocol.md의 eval 독립성)
 
+evaluator는 네 task 조건뿐 아니라 **네가 건드린 산출물을 소유한 *이전* task의 회귀**도 함께 본다(표적 회귀, 소유 맵 기준). 회귀가 나오면 그것도 **이번 task에서** 고친다 — "네가 깼으면 네가 고친다". 도저히 못 고치면 BLOCKED/BOUNCE로 올린다.
+
 ### 5. 판정 처리
-- **APPROVED** → `knowledge.md`를 갱신(새로 안 사실·결정·함정만, 요약체) + `handoffs/NN.md` 작성 → **`DONE`** 반환
+- **APPROVED** → `knowledge.md` 갱신(새로 안 사실·결정·함정만, 요약체) + `handoffs/NN.md` 작성 + **`run-state.md` 산출물 소유 맵에 이번 task가 만들/바꾼 산출물 기록**(표적 회귀의 근거) → **`DONE`** 반환
 - **NEEDS_REVISION** → 피드백대로 고치고 4로 돌아가 재검증. 단 `run-state.md`의 `per_task_attempt_limit`을 넘기면 멈추고 **`BLOCKED:<정규화 사유>`** 반환 (예: `BLOCKED:spec-gap:환불 실패 분기 미정의`). 정규화 사유는 드라이버의 패턴 감지에 쓰이니 일관된 짧은 키로.
 
 ## 경계

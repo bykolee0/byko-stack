@@ -1,7 +1,7 @@
 {
   "name": "byko-goal",
-  "description": "장기 실행 목표를 새 세션 반복으로 자율 완수하는 워크플로우. 목표를 대화로 설계해 세션 크기의 체크리스트로 분해하고(goal-design), fire-and-forget 드라이버가 task마다 worker+evaluator 서브에이전트를 띄워 독립 검증을 통과할 때까지 반복한다(goal-run). 코드·집필·기획·리서치 등 도메인 무관. 검증 기준은 목표에 따라 문서로 정의된다.",
-  "version": "0.1.0",
+  "description": "장기 실행 목표를 새 세션 반복으로 자율 완수하는 워크플로우. 목표를 대화로 설계해 세션 크기의 체크리스트로 분해하고(goal-design), fire-and-forget 드라이버가 task마다 worker+evaluator 서브에이전트를 띄워 독립 검증을 통과할 때까지 반복한다(goal-run). 주기적으로 auditor가 완료분의 회귀를 점검하고 진행에 맞춰 체크리스트를 재계획한다. 코드·집필·기획·리서치 등 도메인 무관. 검증 기준은 목표에 따라 문서로 정의된다.",
+  "version": "0.2.0",
   "author": {
     "name": "bykolee"
   }

@@ -19,7 +19,7 @@ argument-hint: "[goal-slug]"
 - goal_dir 해석: 인자(slug) > `docs/goals/*/` 탐색(1개면 사용, 복수면 최근순 제시 후 선택).
 - 프리플라이트(실패 시 루프 시작 거부):
   - `goal.md`에 완수조건 + **비어있지 않은 마스터 체크리스트**가 있는가 → 없으면 "`/goal-design`으로 설계를 마치세요"
-  - `run-state.md`에 캡(max_iterations, max_minutes)이 있는가 → 없으면 이 자리에서 한 번 입력받아 기록
+  - `run-state.md`에 캡(max_iterations, max_minutes)이 있는가 → 없으면 이 자리에서 한 번 입력받아 기록. `checkpoint_every`(기본 4)·`major_changes_budget`(기본 3)이 없으면 기본값으로 채운다
 - **권한 점검**: 세션이 무프롬프트(bypassPermissions/acceptEdits)가 아니면 경고한다 — "권한 프롬프트가 fire-and-forget을 끊을 수 있습니다. `claude --dangerously-skip-permissions`로 재실행을 권장." 그래도 유저가 진행하면 진행한다.
 
 ### Step 1: 매크로 루프 (loop-protocol의 매크로 루프대로)
@@ -30,17 +30,22 @@ loop:
   1. run-state.md + goal.md(체크리스트·완수조건) 재독
   2. 캡 체크: iterations_used ≥ max_iterations  OR  elapsed ≥ max_minutes
        → Step 3(정지·인계)
-  3. 전부 [x] → Step 2(최종 eval)
-  4. 다음 [ ] task 선택(의존 풀린 것 우선) → goal.md [~] 표시, run-state.current_task 기록
-  5. ▶ Agent로 byko-goal:worker 띄움 — 전달은 goal_dir + task ID 뿐
-  6. 한 줄 결과 수신 → 게이트 처리:
-        DONE          → goal.md [x], run-state done
+  3. 체크포인트: done_since_checkpoint ≥ checkpoint_every
+       → ▶ Agent로 byko-goal:auditor 띄움(goal_dir + last_checkpoint)
+       → 델타 적용(아래) → done_since_checkpoint=0 → 1로
+  4. 전부 [x] → ▶ auditor 최종 패스 1회 → Step 2(최종 eval)
+  5. 다음 [ ] task 선택(의존 풀린 것 우선) → goal.md [~] 표시, run-state.current_task 기록
+  6. ▶ Agent로 byko-goal:worker 띄움 — 전달은 goal_dir + task ID 뿐
+  7. 한 줄 결과 수신 → 게이트 처리:
+        DONE          → goal.md [x], run-state done, done_since_checkpoint++
         BLOCKED:<사유> → goal.md [!], run-state·BLOCKED 로그 기록, 다음 독립 task로
         BOUNCE:<사유>  → 즉시 정지, 사람 호출(목표 결함)
-  7. iterations_used++ , 카운터·상태 run-state.md에 기록 → 1로
+  8. iterations_used++ , 카운터·상태 run-state.md에 기록 → 1로
 ```
 
 **패턴 감지**: BLOCKED 정규화 사유가 같은 값으로 K회(기본 2) 쌓이면 정지하고 사람을 부른다(목표 자체의 구조적 문제 가능). 상세는 `references/recovery.md`.
+
+**체크포인트 델타 적용 (auditor)**: auditor가 돌려준 **concise 델타만** 적용한다 — ① **재오픈**: 회귀한 task를 goal.md `[ ]`로 되돌리고 사유 기록 ② **체크리스트 변경**: 추가/분할/정제는 자율 적용, 파괴적 변경(삭제/재범위/순서)은 `major_changes_used++` 후 `major_changes_budget` 초과 시 정지+사람 호출. 적용한 변경은 goal.md "변경 이력"에 한 줄. auditor의 상세 근거는 `audit/`에 있으니 컨텍스트에 들이지 않는다. **목표·완수조건은 절대 바꾸지 않는다.** auditor가 `BOUNCE:<사유>`를 올리면 즉시 정지+사람 호출. 상세는 `references/recovery.md`.
 
 드라이버는 **절대 직접 task를 구현·분석하지 않는다.** 유혹이 들면(작은 task니까 내가…) 참고 worker를 띄운다 — 그래야 네 컨텍스트가 디스패치 기록만으로 유지된다.
 

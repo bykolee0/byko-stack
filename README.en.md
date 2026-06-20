@@ -131,6 +131,8 @@ A workflow that autonomously completes long-running goals across **repeated fres
 
 The core is a split between a **driver (long-lived, lightweight) / worker (disposable, heavy) / disk state**. The long-lived driver never does the work itself — it spawns one worker per task and receives a single-line result, so it never bloats. Each disposable worker finishes implementation, evaluation, and revision inside its own context, then dies. The only memory is the documents under `docs/goals/<slug>/`, so progress survives context compaction and session termination losslessly.
 
+Regression and plan drift are caught in three layers — each task's evaluator also re-checks the prior tasks it touched (targeted), an `auditor` runs every `checkpoint_every` tasks to check global regression and whether the remaining checklist still holds (periodic), and a final eval inspects the whole at the end. **The goal and completion conditions are fixed**; the checklist is re-planned by the auditor as work proceeds (destructive changes are capped by a budget).
+
 **Skills**
 
 | Skill | Role |
@@ -144,6 +146,7 @@ The core is a split between a **driver (long-lived, lightweight) / worker (dispo
 | --- | --- |
 | `worker` | A disposable executor that completes one task end to end. Writes the completion conditions, does the work, and gets independent verification from the evaluator, revising until it passes. Fans out to explorer/sub-workers for large tasks. |
 | `evaluator` | Independently verifies a task's completion conditions in an isolated context. Distrusts the caller's claims; judges PASS/FAIL against the on-disk source of truth and direct inspection. |
+| `auditor` | Runs global regression and checklist re-validation at periodic checkpoints. Writes details to audit/ and returns only a concise delta (reopen tasks, checklist changes) to the driver. |
 | `explorer` | Read-only investigation (code analysis, web research). Reports only evidence-backed facts. |
 
 #### Default workflow
