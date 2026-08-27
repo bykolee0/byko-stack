@@ -1,0 +1,36 @@
+{
+  "name": "byko-goal-codex",
+  "version": "0.1.0",
+  "description": "Codex native goal과 subagent를 이용해 장기 목표를 설계하고 동적으로 재계획하며 검증까지 반복하는 워크플로우.",
+  "author": {
+    "name": "bykolee",
+    "url": "https://github.com/bykolee0"
+  },
+  "homepage": "https://github.com/bykolee0/byko-stack",
+  "repository": "https://github.com/bykolee0/byko-stack",
+  "keywords": [
+    "long-running-goals",
+    "codex",
+    "subagents",
+    "orchestration",
+    "evaluation"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Byko Goal Codex",
+    "shortDescription": "장기 목표를 설계하고 subagent 검증 루프로 완수합니다.",
+    "longDescription": "목표 계약과 동적 task plan을 파일에 남기고, Codex native goal lifecycle과 격리된 worker, evaluator, auditor subagent를 조율해 장기 작업을 중단 가능하고 재개 가능한 검증 루프로 수행합니다.",
+    "developerName": "bykolee",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "장기 목표를 실행 가능한 goal로 설계해줘.",
+      "이 goal을 subagent로 검증하며 끝까지 실행해줘.",
+      "중단된 goal을 디스크 상태에서 재개해줘."
+    ],
+    "brandColor": "#7C3AED"
+  }
+}

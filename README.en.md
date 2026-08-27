@@ -21,7 +21,8 @@ byko-plugins/
 ├── plugins/
 │   ├── byko-stack/        # Spec-driven development (SDD) workflow for Claude Code (skills + agents)
 │   ├── byko-stack-codex/  # Codex-native port of the above
-│   └── byko-goal/         # Autonomously completes long goals across repeated sessions
+│   ├── byko-goal/         # Claude Code workflow for long goals across repeated sessions
+│   └── byko-goal-codex/   # Codex port using native goals and subagents
 └── README.md
 ```
 
@@ -78,8 +79,10 @@ This repository also includes Codex plugin metadata.
 - Marketplace metadata: `.agents/plugins/marketplace.json`
 - Plugin manifest: `plugins/byko-stack/.codex-plugin/plugin.json`
 - Codex-native port manifest: `plugins/byko-stack-codex/.codex-plugin/plugin.json`
+- Long-goal port manifest: `plugins/byko-goal-codex/.codex-plugin/plugin.json`
 - Skill directory: `plugins/byko-stack/skills/`
 - Codex-native skill directory: `plugins/byko-stack-codex/skills/`
+- Codex goal skill directory: `plugins/byko-goal-codex/skills/`
 
 For local use, place this repository where Codex can read `.agents/plugins/marketplace.json`, or register this repository as a local marketplace in your Codex plugin marketplace configuration.
 
@@ -157,7 +160,31 @@ claude --dangerously-skip-permissions   →  switch to a prompt-free session
 /goal-run <slug>           →  autonomous run (repeats until done or cap; re-invoke to resume)
 ```
 
-Autonomous runs assume a prompt-free (auto-approval) session — `goal-design` ends by guiding the recommended permission setup and the launch command. Shared conventions live in `plugins/byko-goal/shared/`. (Codex port: later.)
+Autonomous runs assume a prompt-free (auto-approval) session — `goal-design` ends by guiding the recommended permission setup and the launch command. Shared conventions live in `plugins/byko-goal/shared/`.
+
+### byko-goal-codex
+
+A Codex-native port of the central `byko-goal` ideas: a **fixed goal contract, dynamic task plan, file-backed memory, and independent verification**. It uses the Codex native goal lifecycle instead of requiring blanket auto-approval, keeping autonomous progress separate from action authorization.
+
+Each `docs/goals/<slug>/` stores the fixed contract (`goal.md`), mutable task graph (`plan.md`), machine state (`state.json`), curated knowledge (`knowledge.md`), and append-only history (`journal.md`). Tasks are preserved as `superseded` instead of being deleted, so auditor-driven add/split/refine/reorder changes retain their rationale and history.
+
+Only the main session updates authoritative state. Workers perform assigned tasks, fresh evaluators judge disk truth and direct evidence without receiving worker claims, and auditors check regressions and remaining plan validity at checkpoints. Write workers run in parallel only when their ownership is genuinely disjoint.
+
+**Skills**
+
+| Skill | Role |
+| --- | --- |
+| `codex-goal-design` | Defines the objective, DoD, scope, authorization boundary, and task acceptance criteria, then creates the durable goal artifact set. |
+| `codex-goal-run` | Creates or resumes the native goal and orchestrates worker/evaluator/auditor subagents until completion or a safe stop. |
+
+#### Default workflow
+
+```text
+$byko-goal-codex:codex-goal-design <long-running objective>
+$byko-goal-codex:codex-goal-run <slug>
+```
+
+If a run stops at a cap, approval boundary, or repeated blocker, invoke the same run skill again to resume from `state.json` and the journal. Shared contracts live in `plugins/byko-goal-codex/shared/`.
 
 ## Adding a new plugin
 

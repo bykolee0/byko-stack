@@ -21,7 +21,8 @@ byko-plugins/
 ├── plugins/
 │   ├── byko-stack/        # Claude Code용 스펙 기반 개발(SDD) 워크플로우 (skills + agents)
 │   ├── byko-stack-codex/  # 위의 Codex 네이티브 포팅
-│   └── byko-goal/         # 장기 목표를 새 세션 반복으로 자율 완수하는 워크플로우
+│   ├── byko-goal/         # 장기 목표를 새 세션 반복으로 자율 완수하는 Claude Code 워크플로우
+│   └── byko-goal-codex/   # native goal + subagent 기반 Codex 포팅
 └── README.md
 ```
 
@@ -78,8 +79,10 @@ Claude Code 세션에서 아래 커맨드로 이 저장소를 마켓플레이스
 - 마켓플레이스 메타데이터: `.agents/plugins/marketplace.json`
 - 플러그인 매니페스트: `plugins/byko-stack/.codex-plugin/plugin.json`
 - Codex 전용 포팅 매니페스트: `plugins/byko-stack-codex/.codex-plugin/plugin.json`
+- 장기 goal 포팅 매니페스트: `plugins/byko-goal-codex/.codex-plugin/plugin.json`
 - 스킬 디렉토리: `plugins/byko-stack/skills/`
 - Codex 전용 스킬 디렉토리: `plugins/byko-stack-codex/skills/`
+- Codex goal 스킬 디렉토리: `plugins/byko-goal-codex/skills/`
 
 로컬에서 사용할 때는 Codex가 이 저장소의 `.agents/plugins/marketplace.json`을 읽을 수 있는 위치에 두거나, Codex 환경의 플러그인 마켓플레이스 설정에서 이 저장소를 로컬 마켓플레이스로 등록한다.
 
@@ -172,7 +175,31 @@ claude --dangerously-skip-permissions   →  무프롬프트 세션으로 전환
 /goal-run <slug>           →  자율 실행 (완수 또는 캡까지 반복, 재호출로 재개)
 ```
 
-자율 실행은 무프롬프트(자동승인)를 전제로 한다 — `goal-design`이 마지막에 권장 권한 설정과 실행 커맨드를 안내한다. 공유 규약은 `plugins/byko-goal/shared/`에 있다. (Codex 포팅은 추후.)
+자율 실행은 무프롬프트(자동승인)를 전제로 한다 — `goal-design`이 마지막에 권장 권한 설정과 실행 커맨드를 안내한다. 공유 규약은 `plugins/byko-goal/shared/`에 있다.
+
+### byko-goal-codex
+
+`byko-goal`의 핵심인 **고정 goal contract + 동적 task plan + 파일 기반 기억 + 독립 검증**을 Codex 실행 모델에 맞게 포팅한 플러그인이다. blanket 자동승인을 요구하지 않고 Codex native goal lifecycle을 사용하며, 자율 실행과 action 권한을 분리한다.
+
+`docs/goals/<slug>/`에는 고정 계약(`goal.md`), 가변 task graph(`plan.md`), machine state(`state.json`), 압축 지식(`knowledge.md`), append-only history(`journal.md`)가 남는다. task는 삭제하지 않고 `superseded`로 보존하므로 auditor가 실행 중 add/split/refine/reorder를 해도 변경 근거와 과거 계획이 사라지지 않는다.
+
+main session만 authoritative state를 갱신한다. worker는 실제 task를 수행하고, fresh evaluator는 worker 설명 없이 disk 정본과 실측으로 판정하며, auditor는 checkpoint마다 회귀와 남은 plan을 검토한다. write scope가 확실히 분리된 task만 병렬화한다.
+
+**스킬**
+
+| 스킬 | 역할 |
+| --- | --- |
+| `codex-goal-design` | objective, DoD, scope, 승인 경계, task acceptance를 설계하고 durable goal 문서 세트를 만든다. |
+| `codex-goal-run` | native goal을 생성·재개하고 worker/evaluator/auditor subagent loop를 완수 또는 안전한 stop까지 실행한다. |
+
+#### 기본 워크플로우
+
+```text
+$byko-goal-codex:codex-goal-design <장기 목표>
+$byko-goal-codex:codex-goal-run <slug>
+```
+
+실행이 cap, 사용자 승인, 반복 blocker에서 멈춰도 같은 run skill을 다시 호출하면 `state.json`과 journal에서 이어진다. 공유 계약은 `plugins/byko-goal-codex/shared/`에 있다.
 
 ## 신규 플러그인 추가
 

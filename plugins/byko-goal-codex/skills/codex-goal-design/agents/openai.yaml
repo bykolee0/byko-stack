@@ -1,0 +1,4 @@
+interface:
+  display_name: "Codex Goal Design"
+  short_description: "장기 목표 계약과 dynamic task plan 설계"
+  default_prompt: "Use $codex-goal-design to turn this long-running objective into a verifiable Codex goal contract and dynamic task plan."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Codex Goal Run"
+  short_description: "native goal과 subagent 검증 루프 실행"
+  default_prompt: "Use $codex-goal-run to execute or resume this durable goal with worker, evaluator, and auditor subagents."
