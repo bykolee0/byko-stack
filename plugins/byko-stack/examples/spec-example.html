@@ -1,0 +1,634 @@
+<!doctype html>
+<html lang="ko" data-byko-doc="spec">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>주문 부분 취소 — 스펙 예시</title>
+<link rel="stylesheet" href="../assets/byko-doc.css">
+</head>
+<body>
+
+<div class="progress"><span></span></div>
+
+<nav class="chapnav" aria-label="챕터">
+  <div class="wrap">
+<!-- byko:chapnav:start -->
+<ol>
+<li><a href="#c0">0. 한 문장</a></li>
+<li><a href="#c1">1. 세 단어</a></li>
+<li><a href="#c2">2. 현재 구조</a></li>
+<li><a href="#c3">3. 정상 흐름</a></li>
+<li><a href="#c4">4. 막히는 지점</a></li>
+<li><a href="#c5">5. 바꾸는 것</a></li>
+<li><a href="#c6">6. 결정할 것</a></li>
+<li><a href="#c7">7. 동시성</a></li>
+<li><a href="#c8">8. 완성 조건</a></li>
+<li><a href="#c9">9. 만드는 순서</a></li>
+<li><a href="#c10">10. 기억할 것</a></li>
+</ol>
+<!-- byko:chapnav:end -->
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap">
+    <p class="kicker">BYKO-STACK SPEC · 예시 문서 · ORDER-PARTIAL-CANCEL</p>
+    <h1>주문을 통째로 버리지 않고<br><span class="accent">한 개만 취소하기</span></h1>
+    <p class="hero-sub">
+      주문 도메인을 처음 보는 사람도, 지금 취소 한 건이 어떤 길을 지나는지 먼저 따라가 본 뒤,
+      "3개 중 1개만"이라는 요청이 그 길 어디에서 막히는지, 그래서 무엇을 바꾸는지를
+      한 편의 이야기처럼 이해하도록 만든 스펙입니다.
+    </p>
+    <div class="hero-cta">
+      <a class="primary" href="#c1">처음부터 읽기</a>
+      <a href="#c6">내가 결정할 것만 보기</a>
+      <a href="#c8">완성 조건 보기</a>
+    </div>
+    <div class="remember">
+      <span class="n">3</span>
+      <p>이 문서에서 끝까지 기억할 단어는 세 개뿐입니다.
+        <strong>주문 아이템</strong>은 영수증의 한 줄, <strong>취소 단위</strong>는 그 줄에서 몇 개를 무르는 사건,
+        <strong>잔여 수량</strong>은 아직 살아 있는 개수입니다.</p>
+    </div>
+    <div class="toolbar" style="margin-top:2rem"></div>
+  </div>
+</header>
+
+<main>
+
+<section class="chapter" id="c0" data-nav="0. 한 문장">
+  <div class="wrap">
+    <p class="chapter-no reveal">Chapter 0 · 한 문장</p>
+    <h2 class="reveal">먼저, 이 변경을<br>한 문장으로</h2>
+    <p class="chapter-intro reveal">
+      취소를 <strong>주문 전체의 상태</strong>로 다루던 것을, <strong>아이템 한 줄에 일어난 사건</strong>으로
+      바꿉니다. 그 한 줄 때문에 환불 금액·재고 복원·주문 상태가 전부 따라 바뀝니다.
+    </p>
+    <div class="callout reveal">
+      <span class="ct">지금까지</span>
+      <p>고객이 3개 중 1개만 취소하고 싶어도 시스템은 "취소 = 주문 전체"만 압니다.
+        그래서 CS가 PG 콘솔에서 부분 환불을 손으로 넣고, 재고도 어드민에서 손으로 되돌립니다.
+        지난 분기 재고 불일치의 절반이 이 손길에서 나왔습니다.</p>
+    </div>
+    <h3 class="reveal">이 문서에서 미리 확정하지 않는 것</h3>
+    <ul class="reveal">
+      <li>쿠폰이 걸린 주문에서 할인을 어떻게 쪼갤지 — <a href="#rv-coupon">6장에서 결정을 요청</a>합니다</li>
+      <li>반품(배송 이후 되돌리기)은 이 스펙의 범위가 아닙니다. 취소는 <strong>배송 전</strong>에만 가능합니다</li>
+    </ul>
+  </div>
+</section>
+
+<section class="chapter" id="c1" data-nav="1. 세 단어">
+  <div class="wrap">
+    <p class="chapter-no reveal">Chapter 1 · 기초</p>
+    <h2 class="reveal">주문 하나에는 사실<br>세 개의 층이 있다</h2>
+    <p class="chapter-intro reveal">
+      이 스펙을 읽으려면 세 단어만 구분되면 됩니다. 코드 이름이 아니라 실제로 무엇인지로 기억하세요.
+    </p>
+    <div class="terms cols-3">
+      <div class="term reveal">
+        <span class="big-word">주문</span>
+        <p><span class="like">영수증 한 장.</span> 결제 한 건, 배송지 하나, 상태 하나를 가집니다.
+          지금 취소는 이 <strong>장 전체</strong>에만 달 수 있습니다.</p>
+      </div>
+      <div class="term reveal">
+        <span class="big-word">주문 아이템</span>
+        <p><span class="like">영수증의 한 줄.</span> "생수 2L × 3개". 상품·단가·수량을 가집니다.
+          재고와 배송은 원래부터 <strong>이 줄 단위</strong>로 움직입니다.</p>
+      </div>
+      <div class="term reveal">
+        <span class="big-word">취소 단위</span>
+        <p><span class="like">한 줄에서 몇 개를 무르는 사건.</span> 이번에 새로 생기는 개념입니다.
+          "그 줄에서 1개" — 이게 앞으로 환불·재고·상태의 <strong>계산 기준</strong>이 됩니다.</p>
+      </div>
+    </div>
+    <div class="callout warn reveal">
+      <span class="ct">여기서 가장 흔한 오해</span>
+      <p>"부분 취소 = 환불을 나눠서 하는 기능"이 아닙니다. 환불은 결과일 뿐이고,
+        진짜 변화는 <strong>취소를 기록으로 남긴다</strong>는 것입니다. 기록이 남아야 재고·상태·정산이
+        같은 사실을 보고 움직입니다.</p>
+    </div>
+  </div>
+</section>
+
+<section class="chapter" id="c2" data-nav="2. 현재 구조">
+  <div class="wrap">
+    <p class="chapter-no reveal">Chapter 2 · 현재 구조</p>
+    <h2 class="reveal">지금 취소 한 건이<br>지나는 길</h2>
+    <p class="chapter-intro reveal">
+      취소 요청은 세 곳을 건드립니다. 각각이 무엇을 책임지는지 먼저 봐 두면,
+      4장에서 무엇이 막히는지가 한눈에 보입니다.
+    </p>
+    <div class="map cols-3">
+      <div class="map-box reveal">
+        <span class="plane-tag">주문 도메인</span>
+        <span class="name">OrderService</span>
+        <span class="role">취소를 받는 유일한 입구. 지금은 <code>cancel()</code> 하나뿐이고, 주문 상태를 <code>CANCELLED</code>로 바꿉니다.</span>
+        <span class="code-ref">src/order/service.py:214</span>
+      </div>
+      <div class="map-box reveal">
+        <span class="plane-tag">재고 도메인</span>
+        <span class="name">InventoryService</span>
+        <span class="role">아이템 단위로 재고를 빼고 되돌립니다. <strong>원래부터 줄 단위</strong>로 동작합니다.</span>
+        <span class="code-ref">src/inventory/service.py:88</span>
+      </div>
+      <div class="map-box reveal">
+        <span class="plane-tag">결제 도메인</span>
+        <span class="name">Refund + PG</span>
+        <span class="role">환불을 실제로 집행합니다. PG 부분 환불 API는 있지만, 주문 도메인이 부를 이유가 없어 안 씁니다.</span>
+        <span class="code-ref">src/payment/models.py:88</span>
+      </div>
+    </div>
+    <p class="reveal">세 도메인 중 <strong>둘은 이미 아이템 단위</strong>로 일합니다.
+      주문 도메인만 "전부 아니면 전무"입니다. 이번 변경은 새 기능을 얹는 게 아니라,
+      <strong>주문 도메인을 나머지 둘과 같은 눈금에 맞추는 일</strong>입니다.</p>
+  </div>
+</section>
+
+<section class="chapter" id="c3" data-nav="3. 정상 흐름">
+  <div class="wrap">
+    <p class="chapter-no reveal">Chapter 3 · 정상 흐름</p>
+    <h2 class="reveal">아무 문제 없는 날,<br>취소 한 건을 따라가 보자</h2>
+    <p class="chapter-intro reveal">
+      민지가 생수 3개를 주문했다가 마음이 바뀌어 전부 취소합니다. 지금 코드에서 실제로 일어나는 일입니다.
+    </p>
+    <div class="story">
+      <div class="story-step reveal">
+        <div class="story-index">1</div>
+        <div class="story-copy">
+          <h3>"취소할게요"</h3>
+          <p>앱이 <code>POST /orders/{id}/cancel</code>을 호출합니다. 본문은 비어 있습니다 —
+            <strong>무엇을 취소할지 고를 수 있는 자리가 없기 때문</strong>입니다.</p>
+        </div>
+      </div>
+      <div class="story-step reveal">
+        <div class="story-index">2</div>
+        <div class="story-copy">
+          <h3>취소해도 되는 주문인지 본다</h3>
+          <p>결제 완료 상태인지, 배송이 시작되지 않았는지 확인합니다. 검사 대상은 <strong>주문 하나</strong>입니다.</p>
+        </div>
+      </div>
+      <div class="story-step reveal">
+        <div class="story-index">3</div>
+        <div class="story-copy">
+          <h3>재고를 되돌린다</h3>
+          <p>주문의 모든 아이템을 훑어 <code>InventoryService.restore(sku, quantity)</code>를 부릅니다.
+            여기서만은 이미 줄 단위로 움직입니다.</p>
+        </div>
+      </div>
+      <div class="story-step reveal">
+        <div class="story-index">4</div>
+        <div class="story-copy">
+          <h3>결제를 전액 환불한다</h3>
+          <p>결제 금액 전부를 PG에 환불 요청하고 <code>Refund</code> 한 건을 남깁니다.</p>
+        </div>
+      </div>
+      <div class="story-step reveal">
+        <div class="story-index">5</div>
+        <div class="story-copy">
+          <h3>주문에 <code>CANCELLED</code> 도장을 찍는다</h3>
+          <p>여기서 끝입니다. <strong>"무엇이 얼마나 취소됐는지"는 어디에도 남지 않습니다</strong> —
+            주문이 취소됐다는 사실 하나뿐입니다.</p>
+        </div>
+      </div>
+    </div>
+    <div class="callout good reveal">
+      <span class="ct">여기까지는 아무 문제가 없다</span>
+      <p>전부 취소하는 흐름은 잘 돕니다. 문제는 다음 장에서, 고객이 "하나만"이라고 말하는 순간 시작됩니다.</p>
+    </div>
+  </div>
+</section>
+
+<section class="chapter" id="c4" data-nav="4. 막히는 지점">
+  <div class="wrap">
+    <p class="chapter-no reveal">Chapter 4 · 문제</p>
+    <h2 class="reveal">"3개 중 1개만요"라는<br>한 마디가 길을 끊는다</h2>
+    <p class="chapter-intro reveal">
+      같은 흐름을 다시 따라가 봅니다. 이번엔 민지가 1개만 취소하려 합니다.
+    </p>
+    <div class="story">
+      <div class="story-step problem reveal">
+        <div class="story-index">1</div>
+        <div class="story-copy">
+          <h3>요청을 담을 그릇이 없다</h3>
+          <p><code>/cancel</code>에는 "어떤 아이템을 몇 개"를 넣을 자리가 없습니다.
+            앱은 아무것도 보낼 수 없고, 요청은 CS에게 넘어갑니다.</p>
+        </div>
+      </div>
+      <div class="story-step problem reveal">
+        <div class="story-index">2</div>
+        <div class="story-copy">
+          <h3>CS가 PG 콘솔을 연다</h3>
+          <p>부분 환불 금액을 <strong>사람이 계산해서</strong> 직접 입력합니다.
+            우리 DB에는 이 환불에 대한 기록이 남지 않습니다.</p>
+        </div>
+      </div>
+      <div class="story-step problem reveal">
+        <div class="story-index">3</div>
+        <div class="story-copy">
+          <h3>재고는 잊히거나, 두 번 돌아온다</h3>
+          <p>어드민에서 수동 복원합니다. 잊으면 재고가 모자라고, 두 번 누르면 남습니다.
+            <strong>지난 분기 재고 불일치의 절반이 이 단계</strong>입니다.</p>
+        </div>
+      </div>
+      <div class="story-step problem reveal">
+        <div class="story-index">4</div>
+        <div class="story-copy">
+          <h3>주문 상태는 거짓말을 한다</h3>
+          <p>1개가 취소됐는데 주문은 여전히 <code>PAID</code>입니다. 정산 리포트는 취소된 1개를
+            팔린 것으로 셉니다. <strong>아무도 이 사실을 모릅니다</strong> — 기록이 없으니까요.</p>
+        </div>
+      </div>
+    </div>
+    <div class="callout bad reveal">
+      <span class="ct">근본 원인은 API가 아니다</span>
+      <p>엔드포인트에 필드를 하나 더 받는 것으로는 3·4단계가 그대로 남습니다.
+        진짜 원인은 <strong>"얼마가 취소됐다"를 담을 자리가 데이터에 없다는 것</strong>입니다.</p>
+    </div>
+  </div>
+</section>
+
+<section class="chapter" id="c5" data-nav="5. 바꾸는 것">
+  <div class="wrap">
+    <p class="chapter-no reveal">Chapter 5 · 해법</p>
+    <h2 class="reveal">취소를 '상태'가 아니라<br>'사건'으로 바꾼다</h2>
+    <p class="chapter-intro reveal">
+      주문에 도장을 찍는 대신, 아이템에 일어난 일을 한 줄씩 적어 둡니다.
+      그러면 재고·환불·상태가 모두 그 줄을 읽고 따라옵니다.
+    </p>
+    <div class="beforeafter">
+      <div class="ba-card from reveal">
+        <span class="label">지금</span>
+        <p><strong>취소 = 주문의 상태</strong></p>
+        <ul>
+          <li><code>orders.status = CANCELLED</code> 하나가 전부</li>
+          <li>얼마가 취소됐는지 기록 없음</li>
+          <li>재고·환불은 사람이 맞춰야 함</li>
+          <li>부분 취소는 표현 불가</li>
+        </ul>
+      </div>
+      <div class="ba-arrow reveal">→</div>
+      <div class="ba-card to reveal">
+        <span class="label">바꾼 뒤</span>
+        <p><strong>취소 = 아이템에 일어난 사건</strong></p>
+        <ul>
+          <li>취소 단위가 행으로 쌓임 (무엇을·몇 개)</li>
+          <li>잔여 수량 = <code>quantity − cancelled_qty</code></li>
+          <li>재고 복원·환불이 같은 트랜잭션에서 따라옴</li>
+          <li>전체 취소 = "전부에 대한 부분 취소"로 통합</li>
+        </ul>
+      </div>
+    </div>
+    <h3 class="reveal">바뀐 뒤의 흐름</h3>
+    <div class="story">
+      <div class="story-step fix reveal">
+        <div class="story-index">1</div>
+        <div class="story-copy">
+          <h3>무엇을 몇 개인지 함께 보낸다</h3>
+          <p><code>POST /orders/{id}/cancellations</code> · <code>{items:[{order_item_id, quantity}]}</code></p>
+        </div>
+      </div>
+      <div class="story-step fix reveal">
+        <div class="story-index">2</div>
+        <div class="story-copy">
+          <h3>줄마다 취소 가능한지 본다</h3>
+          <p>배송이 시작된 줄인가, 잔여 수량이 충분한가. <strong>검사 대상이 주문에서 줄로 내려옵니다.</strong></p>
+        </div>
+      </div>
+      <div class="story-step fix reveal">
+        <div class="story-index">3</div>
+        <div class="story-copy">
+          <h3>사건을 남기고, 재고를 되돌린다</h3>
+          <p>취소 단위 행을 쓰고 <code>cancelled_qty</code>를 올리고 재고를 복원합니다 —
+            <strong>하나의 트랜잭션</strong>이라 셋 중 하나만 성공하는 일이 없습니다.</p>
+        </div>
+      </div>
+      <div class="story-step fix reveal">
+        <div class="story-index">4</div>
+        <div class="story-copy">
+          <h3>그만큼만 환불한다</h3>
+          <p>커밋이 끝난 뒤 PG 부분 환불을 호출합니다. 순서가 중요합니다 —
+            <a href="#rv-order">6장에서 이유를 설명</a>합니다.</p>
+        </div>
+      </div>
+      <div class="story-step fix reveal">
+        <div class="story-index">5</div>
+        <div class="story-copy">
+          <h3>남은 게 0이면 주문도 닫는다</h3>
+          <p>모든 줄의 잔여 수량이 0이 되면 주문 상태가 <code>CANCELLED</code>가 됩니다.
+            기존 전체 취소와 <strong>최종 모습이 같아집니다</strong>.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="chapter" id="c6" data-nav="6. 결정할 것">
+  <div class="wrap">
+    <p class="chapter-no reveal">Chapter 6 · 승인</p>
+    <h2 class="reveal">여기서부터는<br>사람이 정해야 한다</h2>
+    <p class="chapter-intro reveal">
+      아래 항목은 코드로 답할 수 없거나, 한 번 정하면 되돌리기 비싼 것들입니다.
+      나머지는 기존 컨벤션을 그대로 따랐으므로 읽지 않으셔도 됩니다.
+    </p>
+
+<!-- byko:review-queue:start -->
+<p class="scn-note">사람 확인이 필요한 항목 <b>5건</b> — 미해결 1 · 되돌리기 어려움 1 · 데이터 변경 1 · 새 타입·구조 1 · 새 개념 1</p>
+<div class="decisions">
+<a href="#rv-coupon" data-rv="open"><span class="chip" data-rv="open" data-icon="?">미해결</span><span class="d-title">쿠폰 할인을 어떻게 쪼갤지 — 답이 있어야 금액이 확정된다</span><span class="d-where"></span></a>
+<a href="#rv-order" data-rv="risk"><span class="chip" data-rv="risk" data-icon="⚠">되돌리기 어려움</span><span class="d-title">PG 환불 이후에는 되돌릴 수 없다 — 커밋 순서로 방어</span><span class="d-where"></span></a>
+<a href="#rv-운영-db-41만-행을-백필한다" data-rv="data"><span class="chip" data-rv="data" data-icon="▲">데이터 변경</span><span class="d-title">운영 DB 41만 행을 백필한다</span><span class="d-where"></span></a>
+<a href="#rv-ordercancellation-테이블을-신설한다" data-rv="type"><span class="chip" data-rv="type" data-icon="▣">새 타입·구조</span><span class="d-title">OrderCancellation 테이블을 신설한다</span><span class="d-where"></span></a>
+<a href="#rv-취소-단위라는-새-도메인-용어가-생긴다" data-rv="new"><span class="chip" data-rv="new" data-icon="◆">새 개념</span><span class="d-title">&#x27;취소 단위&#x27;라는 새 도메인 용어가 생긴다</span><span class="d-where"></span></a>
+</div>
+<!-- byko:review-queue:end -->
+
+    <div id="rv-취소-단위라는-새-도메인-용어가-생긴다" class="rv reveal" data-rv="new" data-rv-title="'취소 단위'라는 새 도메인 용어가 생긴다">
+      <div class="rv-head">
+        <span class="chip" data-rv="new" data-icon="◆">새 개념</span>
+        <span class="rv-title">취소 단위 (CancelUnit)</span>
+        <span class="rv-why">이름이 굳으면 코드·대화·리포트가 전부 따라갑니다</span>
+      </div>
+      <p>"주문 아이템 하나에 대한 수량 n의 취소"를 한 단위로 부릅니다. 앞으로 환불 금액·재고 복원·정산이
+        모두 이 단위를 기준으로 계산됩니다.</p>
+      <p><strong>검토했던 대안</strong>: "취소 요청(CancelRequest)" — 여러 줄을 한 요청으로 묶는 방식.
+        아이템별로 실패할 수 있는데 요청 단위로 묶으면 <strong>절반만 성공한 상태를 표현할 수 없어</strong> 기각했습니다.</p>
+    </div>
+
+    <div id="rv-ordercancellation-테이블을-신설한다" class="rv reveal" data-rv="type" data-rv-title="OrderCancellation 테이블을 신설한다">
+      <div class="rv-head">
+        <span class="chip" data-rv="type" data-icon="▣">새 구조</span>
+        <span class="rv-title">OrderCancellation 엔티티</span>
+        <span class="rv-why">소유를 어느 도메인에 둘지가 걸려 있습니다</span>
+      </div>
+      <p>취소 사건을 담을 테이블입니다. 결제 도메인의 <code>Refund</code>와 합치지 않았습니다 —
+        <code>Refund</code>는 PG 트랜잭션 단위로 기록되고, 취소는 주문 도메인의 사건이기 때문입니다.
+        둘은 <code>pg_refund_id</code>로만 연결합니다. <span class="code-ref">src/payment/models.py:88</span></p>
+<pre><code>class OrderCancellation:
+    id: UUID
+    order_id: UUID
+    order_item_id: UUID     # ← 취소 단위의 키
+    quantity: int           # 1 이상, 잔여 수량 이하
+    refund_amount: Decimal
+    pg_refund_id: str | None
+    status: CancellationStatus   # REQUESTED | REFUNDED | FAILED
+    created_at: datetime</code></pre>
+    </div>
+
+    <div id="rv-운영-db-41만-행을-백필한다" class="rv reveal" data-rv="data" data-rv-title="운영 DB 41만 행을 백필한다">
+      <div class="rv-head">
+        <span class="chip" data-rv="data" data-icon="▲">데이터 변경</span>
+        <span class="rv-title">cancelled_qty 컬럼 추가 · 41만 행 백필</span>
+        <span class="rv-why">되돌리려면 마이그레이션이 한 번 더 필요합니다</span>
+      </div>
+      <p><code>order_items</code>에 <code>cancelled_qty INT NOT NULL DEFAULT 0</code>을 더합니다.
+        이미 전체 취소된 주문(약 41만 건)은 <code>cancelled_qty = quantity</code>로 채워야
+        "취소된 주문의 잔여 수량은 0"이 <strong>과거 데이터에서도 성립</strong>합니다.</p>
+      <p>1만 건씩 배치로 약 12분. 중단해도 안전하며, 실행 시간대만 정해 주시면 됩니다.</p>
+    </div>
+
+    <div class="rv reveal" id="rv-order" data-rv="risk" data-rv-title="PG 환불 이후에는 되돌릴 수 없다 — 커밋 순서로 방어">
+      <div class="rv-head">
+        <span class="chip" data-rv="risk" data-icon="⚠">되돌릴 수 없음</span>
+        <span class="rv-title">DB 커밋 → PG 호출, 이 순서를 고정한다</span>
+      </div>
+      <p>PG 부분 환불은 취소가 불가능합니다. 그래서 <strong>DB를 먼저 커밋하고 그다음 PG를 호출</strong>합니다.
+        반대로 하면 PG는 성공했는데 DB가 실패하는 경우 <strong>돈만 나가고 기록이 없는 상태</strong>가 됩니다.</p>
+      <p>PG가 실패하면 취소 단위를 <code>FAILED</code>로 남기고 재시도 큐에 넣습니다.
+        3회 실패 시 CS 알림 — 이 경로에서만 사람이 개입합니다.</p>
+    </div>
+
+    <div class="rv reveal" id="rv-coupon" data-rv="open" data-rv-title="쿠폰 할인을 어떻게 쪼갤지 — 답이 있어야 금액이 확정된다">
+      <div class="rv-head">
+        <span class="chip" data-rv="open" data-icon="?">미해결</span>
+        <span class="rv-title">쿠폰 주문의 부분 환불 금액</span>
+        <span class="rv-why">정해져야 AC-1의 금액 검증이 확정됩니다</span>
+      </div>
+      <p>"3만원 이상 5천원 할인" 쿠폰이 걸린 주문에서 한 줄만 취소하면, 그 5천원을 어떻게 나눌까요?</p>
+      <div class="beforeafter" style="margin-top:1rem">
+        <div class="ba-card">
+          <span class="label" style="color:var(--green)">A · 금액 비례 분배 (추천)</span>
+          <p>줄 금액 비율대로 할인을 쪼갭니다. 계산이 단순하고, 남은 주문이 쿠폰 조건을 못 채워도 그대로 둡니다.
+            업계 관행이고 CS 설명이 쉽습니다.</p>
+        </div>
+        <div class="ba-arrow">vs</div>
+        <div class="ba-card">
+          <span class="label">B · 조건 재평가</span>
+          <p>취소 후 남은 금액이 쿠폰 조건 미만이면 할인을 회수합니다. 정확하지만
+            고객에게는 "환불이 줄어드는" 경험이 됩니다.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="chapter" id="c7" data-nav="7. 동시성">
+  <div class="wrap">
+    <p class="chapter-no reveal">Chapter 7 · 안전</p>
+    <h2 class="reveal">두 사람이 동시에 누르면<br>무슨 일이 벌어지나</h2>
+    <p class="chapter-intro reveal">
+      고객이 앱에서, CS가 어드민에서 같은 줄을 동시에 취소하면 잔여 수량이 음수가 될 수 있습니다.
+      이건 새 문제가 아니라, 재고 차감에서 이미 풀어 둔 문제입니다.
+    </p>
+    <div class="flow row reveal">
+      <div class="map-box">
+        <span class="name">잠근다</span>
+        <span class="role"><code>SELECT ... FOR UPDATE</code>로 해당 <code>order_items</code> 행을 잠급니다</span>
+      </div>
+      <div class="arrow">→</div>
+      <div class="map-box">
+        <span class="name">잠긴 상태에서 검사</span>
+        <span class="role">잔여 수량이 요청 수량 이상인지 확인합니다</span>
+      </div>
+      <div class="arrow">→</div>
+      <div class="map-box accent" style="--k: var(--green)">
+        <span class="name">쓰고 푼다</span>
+        <span class="role">사건 기록 · <code>cancelled_qty</code> 증가 · 재고 복원까지 한 트랜잭션</span>
+      </div>
+    </div>
+    <p class="reveal">같은 패턴이 재고 차감에 이미 있습니다 <span class="code-ref">src/inventory/repository.py:132</span> —
+      새 방식을 들이지 않고 그대로 따릅니다.</p>
+  </div>
+</section>
+
+<section class="chapter" id="c8" data-nav="8. 완성 조건">
+  <div class="wrap">
+    <p class="chapter-no reveal">Chapter 8 · 완성 조건</p>
+    <h2 class="reveal">무엇이 되면<br>다 만든 것인가</h2>
+    <p class="chapter-intro reveal">
+      AC를 목록으로 읽으면 무슨 말인지 와닿지 않습니다. 상황을 눌러 보세요 —
+      각 버튼이 실제 요청 하나이고, 그때 시스템이 무엇을 돌려주는지가 곧 완성 조건입니다.
+    </p>
+    <div class="scenario reveal">
+      <div class="scn-bar" role="tablist">
+        <button class="scn-btn" role="tab">1개만 취소</button>
+        <button class="scn-btn" role="tab">남은 것보다 많이</button>
+        <button class="scn-btn" role="tab">이미 배송 시작</button>
+        <button class="scn-btn" role="tab">마지막 1개</button>
+        <button class="scn-btn" role="tab">PG 실패</button>
+        <button class="scn-btn" role="tab">동시에 2건</button>
+      </div>
+      <div class="scn-panel">
+        <div class="scn-io">
+          <div><span class="label">상황 · 요청</span>
+            <p class="scn-note">생수 3개짜리 주문. 1개만 취소.</p>
+            <code>POST /orders/A/cancellations · {items:[{item:X, quantity:1}]}</code></div>
+          <div class="out"><span class="label">그러면</span>
+            <p class="scn-note"><code>201</code> + 취소 단위 1건.
+              <code>cancelled_qty</code> 0→1, 재고 +1, 단가만큼 부분 환불.
+              주문 상태는 <code>PAID</code> 그대로.</p></div>
+        </div>
+        <p class="scn-note"><span class="scn-ac">AC-1</span> · integration test로 검증</p>
+      </div>
+      <div class="scn-panel" hidden>
+        <div class="scn-io">
+          <div><span class="label">상황 · 요청</span>
+            <p class="scn-note">잔여 2개인데 3개를 취소 요청.</p>
+            <code>{items:[{item:X, quantity:3}]}</code></div>
+          <div class="out"><span class="label">그러면</span>
+            <p class="scn-note"><code>422 INSUFFICIENT_REMAINING_QTY</code>.
+              <strong>아무것도 바뀌지 않습니다</strong> — 재고도 환불도 없습니다.</p></div>
+        </div>
+        <p class="scn-note"><span class="scn-ac">AC-2</span> · 부분 성공을 허용하지 않는 것이 핵심</p>
+      </div>
+      <div class="scn-panel" hidden>
+        <div class="scn-io">
+          <div><span class="label">상황 · 요청</span>
+            <p class="scn-note">이미 배송이 시작된 줄을 취소 요청.</p>
+            <code>shipment.status ≥ IN_TRANSIT</code></div>
+          <div class="out"><span class="label">그러면</span>
+            <p class="scn-note"><code>409 ITEM_ALREADY_SHIPPED</code>.
+              이건 반품 흐름의 몫이며 이 스펙 범위 밖입니다.</p></div>
+        </div>
+        <p class="scn-note"><span class="scn-ac">AC-3</span></p>
+      </div>
+      <div class="scn-panel" hidden>
+        <div class="scn-io">
+          <div><span class="label">상황 · 요청</span>
+            <p class="scn-note">마지막 남은 1개를 취소.</p>
+            <code>잔여 1 → 0</code></div>
+          <div class="out"><span class="label">그러면</span>
+            <p class="scn-note">취소 단위가 남고, <strong>주문 상태가 <code>CANCELLED</code>로 자동 전이</strong>됩니다.
+              기존 전체 취소와 최종 상태가 같아집니다.</p></div>
+        </div>
+        <p class="scn-note"><span class="scn-ac">AC-4</span> · 정산 쿼리가 분기되지 않게 하려는 결정</p>
+      </div>
+      <div class="scn-panel" hidden>
+        <div class="scn-io">
+          <div><span class="label">상황 · 요청</span>
+            <p class="scn-note">DB는 커밋됐고 PG 부분 환불이 실패.</p>
+            <code>PG 5xx</code></div>
+          <div class="out"><span class="label">그러면</span>
+            <p class="scn-note">취소 단위는 <code>FAILED</code>로 남고 재시도 큐에 적재.
+              <strong>기록 없는 환불이 생기지 않습니다.</strong> 3회 실패 시 CS 알림.</p></div>
+        </div>
+        <p class="scn-note"><span class="scn-ac">AC-6</span> · <a href="#rv-order">커밋 순서 결정</a>이 이 결과를 만듭니다</p>
+      </div>
+      <div class="scn-panel" hidden>
+        <div class="scn-io">
+          <div><span class="label">상황 · 요청</span>
+            <p class="scn-note">같은 줄(잔여 1)에 앱과 어드민이 동시에 1개씩 취소.</p>
+            <code>2 workers · 동시 요청</code></div>
+          <div class="out"><span class="label">그러면</span>
+            <p class="scn-note">하나만 <code>201</code>, 다른 하나는 <code>422</code>.
+              <code>cancelled_qty</code>는 절대 <code>quantity</code>를 넘지 않습니다.</p></div>
+        </div>
+        <p class="scn-note"><span class="scn-ac">AC-7</span> · 행 잠금으로 보장 (7장)</p>
+      </div>
+    </div>
+    <p class="reveal">전체 목록이 필요하면 아래 표를 펼치세요. 표는 구현·검증용이고,
+      위 시나리오가 사람이 읽는 버전입니다.</p>
+    <details class="agent-only" id="ac-table">
+      <summary>AC 표 (구현·검증용 전체 목록)</summary>
+      <div class="table-wrap">
+        <table class="ac-table">
+          <thead><tr><th>ID</th><th>조건</th><th>검증</th></tr></thead>
+          <tbody>
+            <tr><td>AC-1</td><td>3개 중 1개 취소 → 201, cancelled_qty=1, 재고 +1, 부분 환불</td><td>integration</td></tr>
+            <tr><td>AC-2</td><td>잔여 초과 요청 → 422, 무변경</td><td>integration</td></tr>
+            <tr><td>AC-3</td><td>배송 시작 아이템 → 409</td><td>integration</td></tr>
+            <tr><td>AC-4</td><td>잔여 전부 0 → 주문 CANCELLED</td><td>integration</td></tr>
+            <tr><td>AC-5</td><td>재고 복원·사건 기록 중 하나 실패 → 둘 다 롤백</td><td>unit (예외 주입)</td></tr>
+            <tr><td>AC-6</td><td>PG 실패 → FAILED + 재시도 큐</td><td>unit (PG mock)</td></tr>
+            <tr><td>AC-7</td><td>동시 2건 → cancelled_qty ≤ quantity</td><td>동시성 (2 worker)</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </details>
+  </div>
+</section>
+
+<section class="chapter" id="c9" data-nav="9. 만드는 순서">
+  <div class="wrap">
+    <p class="chapter-no reveal">Chapter 9 · 순서</p>
+    <h2 class="reveal">되돌릴 수 있는 것부터<br>만든다</h2>
+    <p class="chapter-intro reveal">
+      순서를 정하는 기준은 하나입니다 — <strong>되돌릴 수 없는 단계를 가장 마지막에 붙인다.</strong>
+      그 앞에서 발견되는 문제는 전부 안전하게 고칠 수 있습니다.
+    </p>
+    <ul class="pipeline reveal">
+      <li class="done"><span class="pl-mark">1</span><span>마이그레이션 — 컬럼 + 테이블 (기본값 0이라 기존 동작 무영향)</span><span class="badge">롤백 가능</span></li>
+      <li class="done"><span class="pl-mark">2</span><span>취소 가능 검증 규칙 · 환불 금액 산정 (병렬)</span><span class="badge">롤백 가능</span></li>
+      <li class="done"><span class="pl-mark">3</span><span>사건 기록 + 재고 복원 + 상태 전이 한 트랜잭션</span><span class="badge">롤백 가능</span></li>
+      <li class="now"><span class="pl-mark">4</span><span>PG 부분 환불 연결 — 내부 계정 10건 카나리 후 오픈</span><span class="badge bad">되돌릴 수 없음</span></li>
+      <li class="todo"><span class="pl-mark">5</span><span>백필 41만 행 (트래픽 낮은 시간대)</span><span class="badge warn">시간대 합의 필요</span></li>
+    </ul>
+    <h3 class="reveal">테스트는 AC를 그대로 옮긴다</h3>
+    <p class="reveal">도메인 규칙은 unit, API 계약은 integration. 기존 <code>tests/order/</code> 구조와
+      <code>pytest</code> + <code>factory_boy</code> 패턴을 따릅니다. 동시성 테스트만 선례가 없어
+      재고 차감 테스트의 <code>ThreadPoolExecutor</code> 방식을 옮겨 옵니다
+      <span class="code-ref">tests/inventory/test_concurrency.py:41</span>.</p>
+    <details class="agent-only">
+      <summary>기계적 변경 목록</summary>
+      <ul>
+        <li><code>OrderService.cancel</code> → <code>cancel_all</code> 리네임 후 <code>create_cancellations</code> 위임 (호출 지점 6곳은 얇은 래퍼 유지)</li>
+        <li><code>tests/fixtures/orders.py</code>의 <code>make_order()</code>에 <code>cancelled_qty=0</code> 기본값 (참조 23곳)</li>
+        <li><code>src/order/errors.py</code>에 <code>INSUFFICIENT_REMAINING_QTY</code>, <code>ITEM_ALREADY_SHIPPED</code> 추가</li>
+        <li>OpenAPI 재생성 (<code>make openapi</code>)</li>
+      </ul>
+    </details>
+  </div>
+</section>
+
+<section class="chapter" id="c10" data-nav="10. 기억할 것">
+  <div class="wrap">
+    <p class="chapter-no reveal">Chapter 10 · 머릿속 지도</p>
+    <h2 class="reveal">다음에 이 도메인을 만질 때<br>기억할 네 가지</h2>
+    <div class="terms cols-2">
+      <div class="term reveal">
+        <span class="big-word">기록이 먼저다</span>
+        <p>상태를 바꾸기 전에 <strong>무슨 일이 있었는지</strong>를 남깁니다. 기록이 있으면
+          재고·환불·정산이 같은 사실을 보고 따라옵니다.</p>
+      </div>
+      <div class="term reveal">
+        <span class="big-word">눈금을 맞춘다</span>
+        <p>재고와 배송이 줄 단위인데 취소만 주문 단위였습니다. 도메인 간 눈금이 다르면
+          그 틈을 <strong>사람이 손으로 메우게</strong> 됩니다.</p>
+      </div>
+      <div class="term reveal">
+        <span class="big-word">되돌릴 수 없는 건 마지막에</span>
+        <p>PG 호출·데이터 백필처럼 무를 수 없는 단계는 가장 뒤에 둡니다.
+          앞에서 발견된 문제는 전부 공짜로 고칠 수 있습니다.</p>
+      </div>
+      <div class="term reveal">
+        <span class="big-word">부분 실패를 허용하지 않는다</span>
+        <p>여러 줄을 한 번에 요청해도 하나라도 안 되면 전부 거절합니다.
+          "절반만 취소된 상태"는 <strong>고객도 CS도 설명할 수 없습니다</strong>.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer class="doc-footer">
+  <div class="wrap">
+    <p>이 문서는 byko-stack이 만드는 <strong>스펙 예시</strong>입니다. 실제 작업에서는
+      <code>docs/specs/&lt;project&gt;/spec.html</code>에 같은 구조로 생성됩니다.</p>
+    <p>챕터 목차와 6장의 결정 목록은 <code>byko-doc build</code>가 생성합니다.</p>
+  </div>
+</footer>
+
+<script src="../assets/byko-doc.js"></script>
+</body>
+</html>

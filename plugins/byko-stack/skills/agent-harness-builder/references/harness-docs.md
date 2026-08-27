@@ -68,11 +68,15 @@ date: YYYY-MM-DD
 
 ```text
 docs/specs/<feature>/
-├── spec.md
+├── index.html               # 사람용 현황 (manifest.md에서 생성)
+├── spec.html                # 사람이 승인하는 문서
+├── implementation-plan.html # 사람이 승인하는 문서
+├── manifest.md
 ├── ambiguity-ledger.md
-├── implementation-plan.md
 ├── traceability.md
 └── eval-results/
 ```
+
+사람이 열어서 결정을 내리는 문서만 HTML로 두고, 상태·근거·대조표는 마크다운으로 둔다 (byko-stack의 `shared/doc-system.md`). 프로젝트가 byko-stack을 쓰지 않는다면 전부 마크다운으로 해도 된다 — 중요한 것은 **독자에 따라 형식을 나눈다**는 원칙이다.
 
 작업이 충분히 클 때만 사용한다. 작은 변경은 대화 안의 lightweight plan과 tests로 충분할 수 있다.

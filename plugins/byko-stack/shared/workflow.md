@@ -22,9 +22,29 @@ byko-stack의 모든 스킬이 공유하는 운영 원칙이다. 각 스킬은 �
 3. **독립적인 작업은 병렬로** 같은 턴에 띄운다.
 4. **결과를 그대로 믿지 않는다.** 서브에이전트의 FAIL/지적 사항은 메인 세션이 근거를 확인한 후 채택한다.
 
+## 산출물 형식: 사람이 판단하는 문서는 HTML
+
+| 산출물 | 형식 | 누가 읽나 |
+|--------|------|----------|
+| `index.html` | HTML (`manifest.md`에서 생성) | 사람 — 작업 현황 진입점 |
+| `spec.html` | HTML (저작) | 사람이 승인 · 에이전트가 구현 |
+| `implementation-plan.html` | HTML (저작) | 사람이 승인 |
+| `manifest.md`, `ambiguity-ledger.md`, `traceability.md`, `progress.md`, `analysis/`, `eval-results/`, `review-results/` | md | 에이전트 — 상태·근거·대조표 |
+
+사람이 열어서 **결정을 내리는** 문서만 HTML로 만든다. 상태 파일과 근거 자료는 md가 싸고 튼튼하며, 사람에게는 스킬이 대화로 요약해 보고한다.
+
+**이 HTML들은 명세서가 아니라 해설이다** — 번호가 붙은 챕터로 `배경 → 현재 구조 → 정상 흐름 → 막히는 지점 → 바꾸는 것 → 결정할 것` 순서로 이해시킨다. 저작 규약은 `shared/doc-system.md`, 컴포넌트는 `shared/doc-snippets.md`, 완성된 실물은 `examples/spec-example.html`.
+
+산출물을 만들거나 고친 스킬은 종료 전에 이것을 실행한다:
+
+```bash
+python3 "${CLAUDE_PLUGIN_ROOT}/scripts/byko-doc.py" build <작업 디렉토리>   # 챕터 목차·결정 목록·index.html 갱신
+python3 "${CLAUDE_PLUGIN_ROOT}/scripts/byko-doc.py" check <작업 디렉토리>   # 오류 0이어야 유저에게 보여준다
+```
+
 ## 워크 매니페스트
 
-작업 단위마다 `manifest.md`가 산출물 경로와 상태의 단일 진실 공급원이다. 파일명·위치 하드코딩 대신 매니페스트가 인터페이스가 되므로, 어떤 스킬이든 독립적으로 호출되어 이어받을 수 있다.
+작업 단위마다 `manifest.md`가 산출물 경로와 상태의 단일 진실 공급원이다. 파일명·위치 하드코딩 대신 매니페스트가 인터페이스가 되므로, 어떤 스킬이든 독립적으로 호출되어 이어받을 수 있다. 사람이 보는 `index.html`은 이 파일에서 생성되므로, **현황을 바꾸려면 매니페스트를 고치고 `build`를 돌린다** (index.html을 직접 고치지 않는다).
 
 **기본 위치:** `docs/specs/<project-name>/manifest.md` (산출물들과 같은 디렉토리)
 
@@ -49,10 +69,10 @@ byko-stack의 모든 스킬이 공유하는 운영 원칙이다. 각 스킬은 �
 ## 산출물
 | 산출물 | 경로 | 상태 |
 |--------|------|------|
-| 스펙 | spec.md | ✅ |
+| 스펙 | spec.html | ✅ |
 | ambiguity ledger | ambiguity-ledger.md | ✅ 게이트 통과 |
 | 코드 분석 | analysis/<topic>.md | ✅ |
-| 구현 계획 | implementation-plan.md | — |
+| 구현 계획 | implementation-plan.html | — |
 | traceability | traceability.md | — |
 | eval 결과 | eval-results/ | spec: APPROVED |
 | review 결과 | review-results/ | — |
@@ -73,7 +93,7 @@ byko-stack의 모든 스킬이 공유하는 운영 원칙이다. 각 스킬은 �
 
 산출물 경로는 매니페스트 기준 상대 경로. 단계는 고정 순서가 아니다 — 실제로 수행한 단계만 기록하고, 건너뛴 단계는 적지 않는다.
 
-**갱신 책임:** 산출물을 만들거나 상태를 바꾼 스킬이 종료 전에 매니페스트를 갱신한다.
+**갱신 책임:** 산출물을 만들거나 상태를 바꾼 스킬이 종료 전에 매니페스트를 갱신하고 `byko-doc build`로 `index.html`을 최신화한다.
 
 ## 핸드오프
 

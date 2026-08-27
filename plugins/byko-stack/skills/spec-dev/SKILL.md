@@ -8,7 +8,7 @@ allowed-tools: Read, Write, Edit, Glob, Grep, Bash, Agent, Skill
 
 스펙을 기반으로 실제 코드를 구현한다. **스펙에 쓰인 대로, 기존 코드 스타일대로, 사이드이펙트 없이.**
 
-먼저 읽을 것: `../../shared/workflow.md`, `../../shared/question-policy.md`.
+먼저 읽을 것: `../../shared/workflow.md`, `../../shared/question-policy.md`. 구현 계획 문서를 만들 때(전략 B·C) `../../shared/doc-system.md` — 계획서도 나열이 아니라 **왜 이 순서인지 이해시키는 문서**다.
 
 메인 세션의 역할은 **구현 루프의 오케스트레이션**이다: 대상 파악 → 분석 위임 → 전략 결정 → 구현 단위 분배 → 검증 → 매니페스트 갱신. 큰 구현에서 코드 작성 자체는 `byko-stack:implementer`에 위임하여 메인 컨텍스트를 보존한다.
 
@@ -20,7 +20,7 @@ allowed-tools: Read, Write, Edit, Glob, Grep, Bash, Agent, Skill
 
 **대상 탐색** (workflow.md 규칙): 인자 > 매니페스트 탐색 > 유저에게 확인.
 
-**Case A — 스펙이 있는 경우**: 매니페스트가 가리키는 spec.md, ambiguity-ledger.md, analysis/를 읽는다.
+**Case A — 스펙이 있는 경우**: 매니페스트가 가리키는 `spec.html`(구버전 작업 디렉토리면 `spec.md`), `ambiguity-ledger.md`, `analysis/`를 읽는다.
 
 품질 확인 (실패 시 구현을 거부한다):
 
@@ -33,7 +33,7 @@ allowed-tools: Read, Write, Edit, Glob, Grep, Bash, Agent, Skill
 **Case B — 스펙 없이 호출된 경우**: 막지 않는다. 대화에서 합의된 요구사항을 정리하여:
 
 1. 목표·범위·**최소 AC 목록**(항목당 검증 방법 포함)을 유저에게 확인받는다
-2. `docs/specs/<project>/manifest.md`를 경량으로 생성한다 — 문제 정의 + AC를 매니페스트에 직접 기록 (별도 spec.md 없이)
+2. `docs/specs/<project>/manifest.md`를 경량으로 생성한다 — 문제 정의 + AC를 매니페스트에 직접 기록 (별도 스펙 문서 없이). `byko-doc build <작업 디렉토리>`로 `index.html`을 만들어 유저가 현황을 볼 수 있게 한다
 3. 진행한다. 단, 작업 중 범위가 계속 자라면 "/spec-designer로 정식 스펙을 만드는 게 안전합니다"를 제안한다
 
 AC 없이는 진행하지 않는다 — AC가 곧 완료 조건이자 테스트 기준이다.
@@ -68,9 +68,26 @@ AC 없이는 진행하지 않는다 — AC가 곧 완료 조건이자 테스트 
 
 #### 전략 B: 계획 후 구현
 
-1. **traceability.md** — AC → 구현 Step → 대상 파일 → 테스트 매핑. 모든 AC가 매핑되어야 한다
-2. **implementation-plan.md** — 실행 가능한 단계로 분해
-3. 유저에게 plan 제시. ⏸️ 확인 대기. (`/eval-gate plan`으로 독립 검증 가능함을 안내)
+1. **traceability.md** — AC → 구현 Step → 대상 파일 → 테스트 매핑. 모든 AC가 매핑되어야 한다 (기계 대조표라 md로 둔다)
+2. **implementation-plan.html** — 실행 가능한 단계로 분해. 이 문서는 유저가 "이대로 코드를 건드려도 되나"를 승인하는 자리다:
+
+   ```bash
+   python3 "${CLAUDE_PLUGIN_ROOT}/scripts/byko-doc.py" new --kind plan \
+     --title "<프로젝트> 구현 계획" --project <name> --out docs/specs/<name>/implementation-plan.html
+   ```
+
+   골격은 챕터로 나온다 — `0.한 문장 · 1.왜 이 순서 · 2.단계 · 3.영향 범위 · 4.승인할 것 · 5.AC 매핑`.
+   규약은 `../../shared/doc-system.md`, 마크업은 `../../shared/doc-snippets.md`, 실물 감각은 `../../examples/spec-example.html`.
+
+   - **0장**: 총 몇 단계·몇 파일이고 **어디부터 되돌릴 수 없는지**를 한 문단으로
+   - **1장**: 왜 이 순서인가. 기준을 밝힌다 — 보통 "되돌릴 수 없는 단계를 가장 뒤에"
+   - **2장**: 단계 표 (단계 · 내용 · 대상 파일 · 검증 · 의존). 순서와 롤백 경계는 `.pipeline`으로도 보여주면 한눈에 읽힌다
+   - **3장**: 호출 체인·공유 상태·트랜잭션 경계. 되돌릴 수 없는 것은 `data-rv="risk"`, 데이터 변경은 `data-rv="data"`, 계획에서 새로 정한 구조는 `data-rv="type"`
+   - **4장**: 승인 요청 — 생성 영역이 3장의 악센트를 모아 목록으로 만든다
+   - 단순 리네임·파일 이동·픽스처 갱신은 `<details class="agent-only">`로 접는다
+   - 채운 뒤 `byko-doc build` → `check`
+
+3. 유저에게 plan 제시 — 경로와 함께 **승인이 필요한 항목**을 대화로 요약한다. ⏸️ 확인 대기. (`/eval-gate plan`으로 독립 검증 가능함을 안내)
 4. 승인 후 구현 → Step 5로
 
 #### 전략 C: 구현 루프 (오케스트레이션)
@@ -91,7 +108,8 @@ AC 없이는 진행하지 않는다 — AC가 곧 완료 조건이자 테스트 
 1. **AC 대조**: AC 테이블을 하나씩 대조하여 누락 확인
 2. **전체 테스트**: 관련 테스트 전체 통과 확인
 3. **사이드이펙트**: 기존 테스트가 깨지지 않았는지 확인
-4. **매니페스트 갱신**: 단계 상태, 변경 파일, 핵심 결정
+4. **매니페스트 갱신**: 단계 상태, 변경 파일, 핵심 결정. 구현 중 스펙의 `open`/`decision`이 해소되었으면 `spec.html`의 악센트도 정리한다
+5. **문서 최신화**: `byko-doc build <작업 디렉토리>` → `check` (index.html 진행 상태와 결정 목록이 실제와 맞아야 한다)
 
 자체 검증은 같은 컨텍스트의 확인이므로 편향이 있다. 결과를 보여준 뒤 제안한다:
 

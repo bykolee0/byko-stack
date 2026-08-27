@@ -8,12 +8,13 @@ allowed-tools: Read, Write, Edit, Glob, Grep, Bash, Agent, Skill
 
 유저와의 **대화**를 통해 구현 스펙을 완성한다. 스펙은 이후 에이전트의 유일한 지침서 역할을 한다.
 
-먼저 읽을 것: `../../shared/workflow.md` (오케스트레이션·매니페스트), `../../shared/question-policy.md` (질문 정책).
+먼저 읽을 것: `../../shared/workflow.md` (오케스트레이션·매니페스트), `../../shared/question-policy.md` (질문 정책). 스펙 문서를 실제로 쓰기 시작할 때(Step 4) `../../shared/doc-system.md` (사람용 HTML 규약).
 
-핵심 원칙 두 가지:
+핵심 원칙 세 가지:
 
 - **모호한 상태를 통과시키지 않는다** — 단, 코드로 답할 수 있는 것은 유저에게 묻지 않는다. 조사 → 해결안 → 유저 결정이 필요한 것만 질문 (question-policy.md)
 - **메인 세션은 대화와 조율만 한다** — 광범위 코드 분석은 `byko-stack:code-explorer`에 위임하고, 분석 원문이 아닌 결론만 컨텍스트에 유지한다
+- **스펙은 명세서가 아니라 해설이다** — 구현 에이전트의 지침서인 동시에 유저가 방향을 판단하는 자리다. 항목을 나열하지 말고 **배경 → 현재 구조 → 정상 흐름 → 막히는 지점 → 바꾸는 것 → 결정할 것** 순서로 이해시킨다. 사람이 정해야 할 지점에만 악센트를 달고, 기계적 변경은 접어 둔다 (`../../shared/doc-system.md`)
 
 ---
 
@@ -76,23 +77,38 @@ allowed-tools: Read, Write, Edit, Glob, Grep, Bash, Agent, Skill
 
 1. **manifest.md** — workflow.md 템플릿. **문제 정의 섹션에 최초 요구의 본질을 기록한다** (이후 reviewer의 기준점이 되므로 스펙 요약이 아니라 원본 문제를 적는다)
 2. **ambiguity-ledger.md** — 13개 항목 상태 (`references/ambiguity-ledger.md`)
-3. **spec.md** 초안 (`references/spec-templates.md`)
+3. **spec.html** 초안 — `../../shared/doc-system.md`를 읽고 골격을 만든 뒤 채운다:
+
+```bash
+python3 "${CLAUDE_PLUGIN_ROOT}/scripts/byko-doc.py" new --kind spec \
+  --title "<프로젝트 제목>" --project <project-name> --out docs/specs/<project-name>/spec.html
+```
+
+골격은 챕터로 나온다. 채우는 규칙은 `references/spec-templates.md`, **실물 예시는 `../../examples/spec-example.html`** — 규칙을 읽기 전에 예시를 먼저 본다. 채운 뒤 `build`(챕터 목차·결정 목록 생성) → `check`(구조 검증). 오류가 있으면 고친 뒤 보여준다.
 
 **범위 판단**: 독립 기능 3개 이상 + 서로 다른 도메인 → 멀티 스펙 (sub-specs/) 제안 후 합의.
 
 **ledger 게이트**: `blocking` 0개 / `assumed` ≤ 2 / `open` ≤ 3. 미통과 시 해당 항목을 모아 유저에게 일괄 확인 요청 후 Step 3으로.
 
-**스펙 필수 섹션**: 목표, 배경, 현행 분석 요약, 도메인 규칙, 구현 상세, **AC 테이블** (단일 진실 공급원), 테스트 전략, 이슈 및 결정 사항, 구현 순서, 구현 지침.
+**챕터 구성** (골격이 만들어 준다): `0.한 문장 · 1.개념 · 2.현재 구조 · 3.정상 흐름 · 4.막히는 지점 · 5.바꾸는 것 · 6.결정할 것 · 7.완성 조건 · 8.만드는 순서 · 9.기억할 것`
+
+챕터를 더하거나 빼도 되지만 **1~4장을 건너뛰고 5장부터 시작하지 않는다** — 배경 없이 결과부터 주면 유저는 무엇을 승인하는지 알 수 없다. 제목은 라벨("도메인 규칙")이 아니라 장면("주문 하나에는 사실 세 개의 층이 있다")으로 쓴다. 표지에는 **끝까지 기억할 단어 2~3개**를 넣는다.
+
+완성 조건(7장)은 AC 표를 나열하는 대신 **상황을 눌러 보는 시나리오**(`.scenario`)로 만들고, 전체 AC 표는 `<details class="agent-only">`에 접어 둔다. 기계적 변경도 같은 곳에 접는다.
 
 **AC 규칙**: "~가 동작한다" (X) → "~를 입력하면 ~가 반환된다" (O). 각 AC에 검증 방법 필수.
 
-유저에게 보여줄 때: ledger 상태 + 스펙 핵심 + **"자체 결정한 사항"(assumed) 목록** — 유저가 한 번에 훑고 이의만 제기하면 되도록.
+**악센트 규칙**: ledger의 `assumed`는 6장에서 `data-rv="decision"`으로, `open`/`[TBD]`는 `data-rv="open"`으로 표시한다 — ledger(에이전트용)와 스펙(사람용)이 같은 것을 가리켜야 유저가 한 곳만 보고 판단할 수 있다. 새 개념·타입·데이터 변경·되돌릴 수 없는 결정도 표시한다. 기존 컨벤션을 그대로 따르는 부분은 표시하지 않는다 — 악센트가 흔해지면 결정 목록이 무의미해진다. 스펙 하나에 5~8건이면 많은 편이다.
+
+유저에게 보여줄 때: 스펙 경로(`docs/specs/<name>/spec.html`)와 함께 **결정 목록에 잡힌 항목 수와 내용**을 대화로 요약한다. "브라우저에서 열면 6장에 정리되어 있습니다"를 안내한다 — 유저가 한 번에 훑고 이의만 제기하면 되도록.
 
 ⏸️ **유저 피드백을 기다린다.**
 
 ### Step 5: 반복 — 유저가 만족할 때까지
 
-피드백 반영 → ledger 갱신 → 다시 제시. 만족하면 매니페스트를 갱신하고 (산출물 경로, 단계 상태, 핵심 결정) 다음을 제안한다:
+피드백 반영 → ledger 갱신 → 스펙 수정 → `build` → `check` → 다시 제시. **결정이 바뀌면 악센트도 갱신한다** (해소된 `open`은 내리고, 새로 생긴 판단거리는 표시). 결정 목록이 "지금 사람이 볼 것"이 아니게 되는 순간 쓸모가 없어진다.
+
+만족하면 매니페스트를 갱신하고 (산출물 경로, 단계 상태, 핵심 결정) `build`로 `index.html`을 최신화한 뒤 다음을 제안한다:
 
 📍 **"스펙이 완성되었습니다. 다음 중 어떻게 진행할까요?"**
 - `/eval-gate spec` — 독립 컨텍스트 정합성 검증 (같은 대화의 자기 평가는 편향 위험)
@@ -105,6 +121,8 @@ allowed-tools: Read, Write, Edit, Glob, Grep, Bash, Agent, Skill
 
 매니페스트가 있으면 그것으로 현황을 복원한다: ledger 게이트 상태 확인 → 진행 현황 요약 → 다음 단계 제안.
 
+**기존 작업 디렉토리의 스펙이 `spec.md`인 경우** (0.3.0 이전 산출물): 그대로 이어가도 동작한다. 유저가 HTML로 옮기길 원하면 `byko-doc new`로 골격을 만들고 내용을 옮긴 뒤 매니페스트의 경로를 갱신한다 — 기존 md는 지우지 말고 남겨 둔다(이력). 유저가 요청하지 않으면 임의로 변환하지 않는다.
+
 ---
 
 ## 에이전트 행동 지침
@@ -116,6 +134,7 @@ allowed-tools: Read, Write, Edit, Glob, Grep, Bash, Agent, Skill
 5. **질문 정책을 따른다** — `../../shared/question-policy.md`. 조사 없이 열린 질문을 던지지 않는다
 6. **게이트를 우회하지 않는다** — blocking이 있으면 스펙 작성 금지. 유저가 "그냥 진행해"라고 해도 영향을 설명하고 `open` 전환 여부를 확인받는다
 7. **기존 패턴을 존중한다** — 스펙이 코드베이스 컨벤션을 따르게 한다
+8. **읽는 사람을 이해시킨다** — 스펙을 다 읽어야만 무엇을 승인하는지 알 수 있다면 문서 설계가 실패한 것이다. 개념은 실물에 빗대어 세우고(코드 이름부터 던지지 않는다), 정상 흐름을 먼저 보여준 뒤 문제를 말하고, 유저의 검토 시간은 새로 정해지는 것에만 쓰게 한다
 
 ---
 
@@ -123,18 +142,22 @@ allowed-tools: Read, Write, Edit, Glob, Grep, Bash, Agent, Skill
 
 ```
 docs/specs/[project-name]/
+├── index.html                 # 사람용 현황 대시보드 (manifest.md에서 생성)
+├── spec.html                  # 사람용 스펙 (저작)
 ├── manifest.md                # 워크 매니페스트 (Step 4에서 생성, 이후 갱신)
-├── spec.md
-├── ambiguity-ledger.md
+├── ambiguity-ledger.md        # 에이전트용 — 13개 항목 상태
 ├── analysis/                  # code-explorer 분석 결과
 │   └── <topic>.md
-├── sub-specs/                 # (멀티 스펙 시)
-└── api-reference.md           # (API 포함 시)
+├── assets/                    # byko-doc.css · byko-doc.js (스크립트가 배치)
+└── sub-specs/                 # (멀티 스펙 시) 01-<feature>.html …
 ```
 
 ## 참조 파일
 
 - `../../shared/workflow.md` — 매니페스트 포맷, 서브에이전트 운용, 핸드오프
 - `../../shared/question-policy.md` — 조사→제안→선택 질문 정책
+- `../../shared/doc-system.md` — 사람용 HTML 규약 (탑다운·배경 먼저·스토리·결정 악센트·도구)
+- `../../shared/doc-snippets.md` — 복붙용 컴포넌트 모음
 - `references/ambiguity-ledger.md` — 13개 항목 상세, 상태 정의, 템플릿
-- `references/spec-templates.md` — 단일/멀티 스펙 템플릿
+- `references/spec-templates.md` — 챕터별 내용 규칙, 단일/멀티 스펙 구조
+- `../../examples/spec-example.html` — 완성된 스펙 실물 (규칙보다 이걸 먼저 본다)

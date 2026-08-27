@@ -33,7 +33,9 @@ plugins/<플러그인>/
 ├── .claude-plugin/plugin.json   # Claude Code 매니페스트 (Codex용은 .codex-plugin/plugin.json)
 ├── skills/                       # 스킬 (각 <스킬>/SKILL.md)
 ├── agents/                       # 서브에이전트 정의
-└── shared/                       # 스킬 간 공유 규약·템플릿
+├── shared/                       # 스킬 간 공유 규약·템플릿
+├── scripts/                      # 스킬이 호출하는 도구 (byko-stack: 문서 빌드·검증)
+└── assets/                       # 산출물에 배포되는 리소스 (byko-stack: 문서 CSS/JS)
 ```
 
 ## 설치 방법
@@ -93,6 +95,17 @@ Claude Code 세션에서 아래 커맨드로 이 저장소를 마켓플레이스
 스펙 기반 개발(Spec-Driven Development) 워크플로우를 위한 스킬 + 서브에이전트 모음.
 
 메인 세션은 오케스트레이터 역할을 한다 — 대화·결정·조율만 메인 컨텍스트에서 수행하고, 코드 분석·독립 평가·병렬 구현은 서브에이전트에 위임한다. 작업 단위마다 `manifest.md`(워크 매니페스트)가 산출물 경로와 단계 상태의 단일 진실 공급원이 되므로, 모든 스킬은 어떤 순서로든 독립 호출이 가능하다. 공유 컨벤션은 `plugins/byko-stack/shared/`를 참고한다.
+
+**문서 형식은 독자가 정한다.** 사람이 열어서 승인·판단하는 문서는 HTML로, 에이전트가 읽고 갱신하는 상태·근거는 마크다운으로 만든다.
+
+| 산출물 | 형식 | 설명 |
+| --- | --- | --- |
+| `index.html` | HTML (생성) | 작업 현황 대시보드. `manifest.md`에서 자동 생성 — 사람의 진입점 |
+| `spec.html` | HTML (저작) | 스펙. **명세 나열이 아니라 해설** — `0.한 문장 → 1.개념 → 2.현재 구조 → 3.정상 흐름 → 4.막히는 지점 → 5.바꾸는 것 → 6.결정할 것 → 7.완성 조건`. 사람이 정해야 할 것은 본문 악센트에서 자동 수집돼 6장에 목록으로 뜬다 |
+| `implementation-plan.html` | HTML (저작) | 구현 계획. 단계·대상 파일·의존·영향 범위. 사람이 착수 승인을 내리는 문서 |
+| `manifest.md` · `ambiguity-ledger.md` · `traceability.md` · `progress.md` · `analysis/` · `eval-results/` · `review-results/` | md | 에이전트용 상태·근거. 사람에게는 스킬이 대화로 요약 보고한다 |
+
+배경을 먼저 깔고 결과를 나중에 두는 이유는 하나다 — 그래야 읽는 사람이 무엇을 승인하는지 안다. HTML 문서는 오프라인 결정적이다: 외부 CDN·스크립트 없이 로컬에서 열리고, 인쇄되며, JS 없이도 전부 읽힌다. 챕터 목차와 결정 목록은 `scripts/byko-doc.py`가 생성하므로 손으로 관리하지 않는다. 저작 규약은 `shared/doc-system.md`, 컴포넌트는 `shared/doc-snippets.md`, **완성된 실물 예시는 `plugins/byko-stack/examples/spec-example.html`**.
 
 **스킬**
 

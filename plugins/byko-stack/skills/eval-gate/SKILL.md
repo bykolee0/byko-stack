@@ -34,9 +34,15 @@ allowed-tools: Read, Write, Edit, Glob, Grep, Bash, Agent, Skill
 
 인자 > 매니페스트 > 유저 확인 순으로 대상을 해석한 뒤, 기계적 사전 검증을 수행한다:
 
-**mode: spec** — spec.md 존재 / ledger 존재 시 `blocking` 0개 / AC 테이블 존재 + 모든 AC에 검증 방법
+**mode: spec** — 스펙 문서 존재 / ledger 존재 시 `blocking` 0개 / AC 테이블 존재 + 모든 AC에 검증 방법
 **mode: plan** — plan 존재 / spec(또는 매니페스트의 AC) 존재 / traceability 있으면 모든 AC 매핑
 **mode: implementation** — spec(또는 AC) 존재 / 관련 테스트 존재 / 테스트 통과 (Bash로 실행)
+
+대상이 HTML이면 구조 검증도 함께 돌린다 — 깨진 문서를 평가에 보내지 않기 위해서다:
+
+```bash
+python3 "${CLAUDE_PLUGIN_ROOT}/scripts/byko-doc.py" check <작업 디렉토리>
+```
 
 **FAIL 시**: 독립 평가를 호출하지 않고 실패 사유와 수정 방법을 구체적으로 안내한다.
 
@@ -73,7 +79,9 @@ evaluator의 판정을 그대로 신뢰하지 않는다. FAIL 항목의 근거�
 
 ### Step 4: 기록 + 보고
 
-게이트 결과를 `eval-results/<mode>-gate-<timestamp>.result.md`로 저장한다 (판정, 상세 결과 파일 경로, accepted 수정 사항, needs_followup). 매니페스트가 있으면 eval 결과 상태를 갱신한다.
+게이트 결과를 `eval-results/<mode>-gate-<timestamp>.result.md`로 저장한다 (판정, 상세 결과 파일 경로, accepted 수정 사항, needs_followup). eval 결과는 에이전트용 기록이고, **사람에게는 아래 보고 원칙대로 대화로 전달한다** — 유저가 파일을 열 필요가 없어야 한다.
+
+매니페스트가 있으면 eval 결과 상태를 갱신하고 `byko-doc build <작업 디렉토리>`로 `index.html`을 최신화한다.
 
 **보고 원칙: 유저가 다른 파일을 열지 않고 판단할 수 있어야 한다.** 각 finding에:
 

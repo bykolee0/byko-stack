@@ -29,7 +29,7 @@
 <!-- 대상 문서의 내용이 여기에 copy된다 -->
 
 <details>
-<summary>spec.md (copied)</summary>
+<summary>spec (copied)</summary>
 
 (문서 전체 내용)
 
@@ -64,17 +64,17 @@ codex는 sandbox 환경에서 실행되므로 파일 접근이 제한될 수 있
 ## Source Documents 복사 가이드
 
 **spec 모드:**
-- spec.md (필수)
+- 스펙 문서 (필수 — `spec.html`이면 `byko-doc.py text`로 평문 추출해 copy)
 - ambiguity-ledger.md (있으면 필수)
 - 같은 디렉토리의 관련 문서
 
 **plan 모드:**
-- implementation-plan.md (필수)
-- spec.md (필수 — 계획이 스펙에 부합하는지 판단 기준)
+- implementation-plan.html (필수 — 평문 추출)
+- 스펙 문서 (필수 — 계획이 스펙에 부합하는지 판단 기준)
 - traceability.md (있으면)
 
 **implementation 모드:**
-- spec.md (필수 — 구현의 판단 기준)
+- 스펙 문서 (필수 — 구현의 판단 기준)
 - traceability.md (있으면)
 - 소스 코드는 경로만 기재
 

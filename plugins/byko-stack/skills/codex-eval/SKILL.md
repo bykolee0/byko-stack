@@ -1,6 +1,6 @@
 ---
 name: codex-eval
-description: OpenAI Codex CLI를 사용하여 독립된 모델/컨텍스트에서 문서/코드를 평가하는 스킬. Claude와 다른 모델의 시각으로 교차검증한다. 스펙, 구현 계획, 구현 결과 등의 독립 평가가 필요할 때 사용한다. "/codex-eval spec docs/specs/project/spec.md", "/codex-eval plan plan.md --output eval-results/plan-codex.md", "/codex-eval --cross eval-results/spec-claude-xxx.md" (교차검증) 등으로 트리거. eval-gate의 evaluator 평가와 함께 사용하면 두 모델의 평가를 비교할 수 있다.
+description: OpenAI Codex CLI를 사용하여 독립된 모델/컨텍스트에서 문서/코드를 평가하는 스킬. Claude와 다른 모델의 시각으로 교차검증한다. 스펙, 구현 계획, 구현 결과 등의 독립 평가가 필요할 때 사용한다. "/codex-eval spec docs/specs/project/spec.html", "/codex-eval plan implementation-plan.html --output eval-results/plan-codex.md", "/codex-eval --cross eval-results/spec-claude-xxx.md" (교차검증) 등으로 트리거. eval-gate의 evaluator 평가와 함께 사용하면 두 모델의 평가를 비교할 수 있다.
 argument-hint: "[mode] [target files...] [--output path] [--cross path]"
 allowed-tools: Bash, Read, Write, Glob, Grep
 ---
@@ -18,9 +18,9 @@ Claude와 다른 모델(OpenAI)이므로 편향이 다르고, 이것이 교차�
 ## 사용법
 
 ```
-/codex-eval spec docs/specs/project/spec.md
-/codex-eval plan docs/specs/project/plan.md --output docs/specs/project/eval-results/plan-codex-20260326-1430.md
-/codex-eval implementation docs/specs/project/spec.md src/
+/codex-eval spec docs/specs/project/spec.html
+/codex-eval plan docs/specs/project/implementation-plan.html --output docs/specs/project/eval-results/plan-codex-20260326-1430.md
+/codex-eval implementation docs/specs/project/spec.html src/
 /codex-eval custom docs/any-document.md
 /codex-eval .myagents/existing-request.md                                        # 기존 요청 파일 재실행
 /codex-eval --cross eval-results/spec-claude-20260326-143052.md                  # evaluator 결과에 codex 교차검증 추가
@@ -72,6 +72,10 @@ TIMESTAMP=$(date +%Y%m%d-%H%M%S)
 
 **신규 평가**: `references/request-template.md` 포맷으로 작성한다.
 - Source Documents에는 가능한 한 **문서 내용을 copy**한다 (codex sandbox에서 파일 접근 제한)
+- 대상이 HTML 문서(`spec.html`, `implementation-plan.html`)면 마크업 대신 평문을 복사한다 — 태그가 토큰만 먹고 평가에 도움이 되지 않는다:
+  ```bash
+  python3 "${CLAUDE_PLUGIN_ROOT}/scripts/byko-doc.py" text docs/specs/<name>/spec.html
+  ```
 
 **재실행**: 기존 파일 그대로 사용.
 
@@ -173,11 +177,11 @@ FAIL 항목을 직접 확인하여 `accepted`/`rejected`/`needs_followup` 분류
 
 ```
 # evaluator(eval-gate) 먼저 → codex 교차검증
-/eval-gate spec spec.md                      # eval-results/spec-claude-<ts>.md 생성
+/eval-gate spec spec.html                    # eval-results/spec-claude-<ts>.md 생성
 /codex-eval --cross eval-results/spec-claude-<ts>.md
 
 # codex 단독 → eval-gate에서 교차검증 요청
-/codex-eval spec spec.md --output eval-results/spec-codex.md
+/codex-eval spec spec.html --output eval-results/spec-codex.md
 ```
 
 eval-gate가 교차검증 모드로 호출하면 evaluator와 병렬로 실행된다.
