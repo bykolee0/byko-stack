@@ -37,7 +37,7 @@ docs/goals/<slug>/
 
 ## 완수 조건 (Definition of Done)
 - [공통] 아래 마스터 체크리스트 전 항목 완료
-- [최종·옵션] <결과/동작 기준 — 도메인별. 검증 방법 명시. 3~5개 이내.
+- [최종·옵션] <결과/동작 기준 — 도메인별. 검증 방법 명시. evaluator 하나가 한 번에 볼 양.
   예) "전체 테스트 스위트 통과 (`<명령>`)" / "목차 전체가 루브릭 X 충족" /
       "산출물 목록 전부 존재 + 상호 정합". 없으면 "공통 조건만">
 
@@ -72,7 +72,7 @@ docs/goals/<slug>/
 - max_iterations: <N>
 - max_minutes: <M>
 - per_task_attempt_limit: 3      # task 라운드당 evaluator 회차·worker dispatch 각각의 상한
-- per_dispatch_minutes: <N>      # worker 한 번의 활성 시간 상한. goal-design이 task 예상 소요×2로 시드, auditor가 실측(완료 task 분 중앙값×2)으로 갱신
+- per_dispatch_minutes: <N>      # worker 한 번의 활성 시간 상한. goal-design이 task 예상 소요×2로 시드, auditor가 실측(dispatch당 소요 중앙값×2)으로 갱신
 - checkpoint_every: 4            # auditor 체크포인트 주기 (task 수)
 - major_changes_budget: 3        # 파괴적 체크리스트 변경 허용 횟수
 - stall_limit: 3                 # 연속 dispatch에 새 [x] 0 → 정지
@@ -105,7 +105,7 @@ docs/goals/<slug>/
 |------|------------|----|
 ```
 
-상태: `pending · running · done · blocked · reopened`. **시도** = `ls eval | grep -cE '^NN-[0-9]'`(드라이버가 매번 덮어쓴다 — worker 신고가 아니다). **디스패치** = 이 라운드에 띄운 worker 수(재개 포함). **분·토큰k** = Agent 결과에 붙는 소요·토큰의 라운드 누적(분 반올림, 없으면 —). **결과** 칸은 `APPROVED`·`BLOCKED:<사유>`·`PARTIAL:time-budget`·`unverified-done`·`기록누락`·`over-time`처럼 한 토막 — 경위는 history.md·eval/에. 체크포인트(auditor) 비용은 task 행이 아니라 체크포인트 기록에 — 인계 보고의 비용 요약은 둘을 합친다.
+상태: `pending · running · done · blocked · reopened · split`. **시도** = 회차 파일 수(드라이버가 매번 덮어쓴다 — worker 신고가 아니다). **디스패치** = 이 라운드에 띄운 worker 수(재개 포함). **분·토큰k** = Agent 결과에 붙는 소요·토큰의 라운드 누적(분 반올림, 결측은 `—` — 0은 실측이다). dispatch당 소요 = 분 ÷ 디스패치. **결과** 칸은 `APPROVED`·`BLOCKED:<사유>`·`PARTIAL:time-budget`·`unverified-done`·`기록누락`·`over-time`처럼 한 토막 — 경위는 history.md·eval/에. 체크포인트(auditor) 비용은 task 행이 아니라 체크포인트 기록에 — 인계 보고의 비용 요약은 둘을 합친다.
 
 ---
 
@@ -155,7 +155,7 @@ docs/goals/<slug>/
 # History — <slug> (append-only)
 
 > 시간순 로그. 아무도 매 회 읽지 않는다 — 사람과 auditor가 필요할 때 본다. 한 사건 = 한 줄.
-> 형식: `- <ts> · <역할> · <종류> · <내용>`  종류: 체크리스트변경(major 표시) · 재오픈 · 정리 · 은퇴 · 제안 · BOUNCE · 일시정지/재개 · 캡변경 · 이행 · 완료
+> 형식: `- <ts> · <역할> · <종류> · <내용>`  종류: 시작 · 재개 · 일시정지 · 완료 · 체크리스트변경(major 표시) · 분할 · 재오픈 · PARTIAL · 정리 · 은퇴 · 제안 · BOUNCE · 캡변경 · 이행
 > `제안`은 worker도 쓴다(계획 수준 변경 제안 — auditor가 다음 체크포인트에 처리). 나머지는 드라이버·auditor.
 ```
 
@@ -167,7 +167,7 @@ docs/goals/<slug>/
 # Task NN: <제목>
 
 > worker가 작업 전 작성. evaluator가 이 파일을 정본으로 검증.
-> 완료조건 규칙(loop-protocol §완료조건): 산출물 술어만 · 필요한 만큼만(10개 넘으면 신호) · 검증은 명령/대조 대상 · 고정점 · 하네스 기록 제외 · 진입점 하나로 접기
+> 완료조건 규칙은 loop-protocol §완료조건이 정본이다 — 여기 옮겨 적지 않는다.
 
 ## 완료조건
 | # | 조건 (산출물에 대한 술어) | 검증 (명령 / 대조 대상) |
