@@ -51,8 +51,8 @@ b. tasks/NN.md에 완료조건 작성 — §완료조건의 규칙대로. 산출
 c. 작업 수행. 팬아웃은 조사(explorer)·독립 구현 조각(일반 서브에이전트)에만.
    하위 byko-goal:worker는 띄우지 않는다 — NN의 기록(tasks/·handoffs/·eval/)과 회차를 오염시킨다.
    넘기는 시점: 조건의 검증 방법을 한 번씩 돌려 초록이면 **바로 d로**. 그 뒤 새 자기 확인을 시작하지 않는다(§검증의 경계).
-   시간: 긴 활동 전에 `now − dispatched_at`을 본다. per_dispatch_minutes가 다 되면 — 산출물이 검증 가능한 상태면 d로,
-   아니면 진행 상태를 tasks/NN.md 작업 노트에 남기고 "PARTIAL:time-budget" 반환(다음 dispatch가 이어서 한다).
+   시간(per_dispatch_minutes를 정한 목표만): 긴 활동 전에 `now − dispatched_at`을 본다. 예산이 다 되면 — 산출물이 검증 가능한
+   상태면 d로, 아니면 진행 상태를 tasks/NN.md 작업 노트에 남기고 "PARTIAL:time-budget" 반환(다음 dispatch가 이어서 한다).
 d. 회차 대조: n = `ls eval | grep -cE '^NN-[0-9]'`. n ≥ per_task_attempt_limit → "BLOCKED:attempt-limit" 반환.
    ▶ evaluator 1개 dispatch (byko-goal:evaluator). goal_dir + task ID만 (독립성).
    조건별로 쪼개 여러 evaluator를 띄우지 않는다 (§eval 독립성 4).
@@ -96,7 +96,7 @@ worker가 자기 손으로 하는 확인은 디스크에 남지 않아 **아무�
 1. **넘기는 시점은 "조건이 초록"이다.** tasks/NN.md 조건의 검증 방법을 한 번씩 돌려 통과하면 즉시 evaluator를 띄운다. 그 뒤로 새 자기 확인을 시작하지 않는다.
 2. **결함 찾기는 evaluator의 일이다.** worker의 자기 확인은 조건을 정직하게 적을 수 있을 만큼이지, 결함을 다 찾기 위한 것이 아니다. evaluator가 지적하면 그것만 고치고 다시 넘긴다 — 검증의 끝은 evaluator의 판정이고, evaluator는 반드시 끝난다(30턴 · 선기록).
 3. **더 확신이 필요하면 확인을 검사기로 만든다.** 손으로 대조한 것은 사라지지만 스크립트·체크리스트로 만든 것은 조건이 되어 evaluator가 돌리고 다음 task도 쓴다(§완료조건 2의 진입점).
-4. **한 dispatch에는 시간 예산이 있다.** `per_dispatch_minutes`(§캡). 예산이 다 되면 검증 가능한 상태면 evaluator로, 아니면 `PARTIAL:time-budget`으로 반환해 다음 dispatch가 잇는다. 어떤 dispatch도 "예산 + evaluator 1회" 안에 끝난다.
+4. **한 dispatch는 유한하다.** 1~3을 지키면 dispatch는 worker의 턴 한도(도구 단위) 안에서 끝나고, 턴이 다하면 드라이버가 디스패치 한도까지 이어서 띄운 뒤 auditor가 나눈다. 시간으로도 경계를 두고 싶으면 유저가 `per_dispatch_minutes`(§캡, 선택)를 정한다 — 플러그인은 시간값을 정하지 않는다(얼마나 걸리는 일인지는 목표마다 다르다). 정했다면 예산이 다 될 때 검증 가능한 상태면 evaluator로, 아니면 `PARTIAL:time-budget`으로 반환해 다음 dispatch가 잇는다.
 
 ## 회귀 방지 (A 표적 · B 전역 체크포인트 · C 체크리스트 재검증 · D 문서 정리)
 
@@ -138,7 +138,7 @@ fire-and-forget의 안전핀. `run-state.md`에 산다 — 컨텍스트가 아�
 | `max_iterations` | worker dispatch 총수 상한 (재개·재디스패치 포함; auditor는 세지 않고 체크포인트 기록에 따로 남긴다) | dispatch마다 `iterations_used++` |
 | `max_minutes` | **활성** 시간 상한 — 정지·유휴 구간은 세지 않는다. auditor 시간도 포함된다(tick이 잡는다) | 매 반복 `elapsed += round((now − last_tick)/60); last_tick = now`(초 단위로 기록해 절삭 누적을 막는다). 재개(Step 0)에서는 `last_tick = now`로 리셋만 한다(더하지 않음). 크래시로 잃은 시간은 세지 않는다(과소 계상 허용) |
 | `per_task_attempt_limit` | task 한 라운드에서 (a) evaluator 회차 (b) worker dispatch **각각**의 상한 (기본 3) | (a) `ls eval \| grep -cE '^NN-[0-9]'` (b) 행의 디스패치 칸. 재오픈 = 새 라운드 |
-| `per_dispatch_minutes` | worker 한 번의 활성 시간 상한 (기본 120). 횟수 캡은 dispatch가 끝나야 세지만 이건 dispatch **안**을 막는다 — 드라이버가 못 보는 구간 | worker가 `dispatched_at`을 읽어 스스로 지킨다(§검증의 경계 4). 드라이버는 반환 시 Agent 소요로 대조해 넘긴 dispatch를 `over-time`으로 표시. 환경이 백그라운드 dispatch·정지를 지원하면 예산의 2배를 넘겨도 반환이 없을 때 끊고 이어서 모드로 재디스패치(recovery.md) |
+| `per_dispatch_minutes` | **선택 · 기본값 없음.** worker 한 번의 활성 시간 상한. 횟수 캡은 dispatch가 끝나야 세지만 이건 dispatch **안**을 막는다 — 드라이버가 못 보는 구간. 값은 사람이 정한다: 모르면 비워 두고, 첫 체크포인트 뒤 상태표의 분 칸(이 목표의 실측)을 보고 정한다 | 정했다면 worker가 `dispatched_at`을 읽어 스스로 지킨다(§검증의 경계 4). 드라이버는 반환 시 Agent 소요로 대조해 넘긴 dispatch를 `over-time`으로 표시. 환경이 백그라운드 dispatch·정지를 지원하면 예산의 2배를 넘겨도 반환이 없을 때 끊고 이어서 모드로 재디스패치(recovery.md). 비어 있으면 worker maxTurns·디스패치 한도가 상한 |
 | `checkpoint_every` | auditor 주기 (기본 4 task) | `done_since_checkpoint` |
 | `major_changes_budget` | 파괴적 체크리스트 변경 허용 횟수 (기본 3) | `major_changes_used` |
 | `stall_limit` | 연속 dispatch에 새 [x]가 0이면 정지 (기본 3) | `stall_streak` (DONE 수락 시 0) |

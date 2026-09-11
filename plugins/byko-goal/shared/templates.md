@@ -72,7 +72,7 @@ docs/goals/<slug>/
 - max_iterations: <N>
 - max_minutes: <M>
 - per_task_attempt_limit: 3      # task 라운드당 evaluator 회차·worker dispatch 각각의 상한
-- per_dispatch_minutes: 120      # worker 한 번의 활성 시간 상한 — worker가 dispatched_at을 읽어 스스로 지킨다
+- per_dispatch_minutes: —        # 선택. worker 한 번의 활성 시간 상한. 비우면 없음(턴·디스패치 한도만). 첫 체크포인트의 실측 분을 보고 사람이 정한다
 - checkpoint_every: 4            # auditor 체크포인트 주기 (task 수)
 - major_changes_budget: 3        # 파괴적 체크리스트 변경 허용 횟수
 - stall_limit: 3                 # 연속 dispatch에 새 [x] 0 → 정지

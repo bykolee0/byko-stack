@@ -21,7 +21,7 @@ argument-hint: "[goal-slug]"
 - goal_dir 해석: 인자(slug) > `docs/goals/*/` 탐색(1개면 사용, 복수면 최근순 제시 후 선택).
 - 프리플라이트(실패 시 루프 시작 거부):
   - `goal.md`에 완수조건 + **비어있지 않은 마스터 체크리스트**가 있는가 → 없으면 "`/goal-design`으로 설계를 마치세요"
-  - `run-state.md`에 캡(max_iterations, max_minutes)이 있는가 → 없으면 이 자리에서 한 번 입력받아 기록. 나머지 노브가 없으면 기본값으로 채운다: `per_task_attempt_limit` 3 · `per_dispatch_minutes` 120 · `checkpoint_every` 4 · `major_changes_budget` 3 · `stall_limit` 3. 카운터(`last_tick`·`stall_streak`·`dispatched_at`·`last_checkpoint`)가 없으면 추가.
+  - `run-state.md`에 캡(max_iterations, max_minutes)이 있는가 → 없으면 이 자리에서 한 번 입력받아 기록. 나머지 노브가 없으면 기본값으로 채운다: `per_task_attempt_limit` 3 · `checkpoint_every` 4 · `major_changes_budget` 3 · `stall_limit` 3. `per_dispatch_minutes`는 선택이라 없으면 `—`로 둔다(시간 예산 없음). 카운터(`last_tick`·`stall_streak`·`dispatched_at`·`last_checkpoint`)가 없으면 추가.
   - **구버전 문서 세트 이행**(0.2 이전에 만든 목표 — 기계적 이동, 내용 불변): `ownership.md`가 없고 run-state.md에 `## 산출물 소유 맵`이 있으면 그 섹션을 `ownership.md`로 잘라 옮긴다. `history.md`가 없고 goal.md에 `## 변경 이력`이 있으면 그 섹션을 `history.md`로 잘라 옮긴다. `archive/`가 없으면 만든다. task 상태표에 디스패치·분·토큰k 칸이 없으면 열을 추가(값 0). history.md에 `이행` 한 줄. 상세는 `references/recovery.md`.
   - **`status: complete`면 여기서 끝낸다** — 현황(완료 N/M · 최종 eval 결과 · 산출물 위치)만 보고한다. 최종 패스·최종 eval을 다시 돌리지 않는다. 사람이 다시 돌리길 원하면(재오픈·추가 task) status를 `running`으로 바꾸라고 안내한다.
   - **`last_tick = now`(초 단위)로 리셋**(더하지 않는다 — 정지해 있던 시간은 활성 시간이 아니다). `status: running`. history.md에 `재개` 한 줄(첫 실행이면 `시작`).
@@ -65,7 +65,7 @@ BOUNCE:<사유>           → 즉시 Step 3 (사람 호출)
 PARTIAL:<사유> / 반환 없음 / 턴 소진
                         → 행의 디스패치 < per_task_attempt_limit 이면 같은 task로 새 worker(이어서 모드) · stall_streak++
                           아니면 BLOCKED:no-progress (계획 문제 → checkpoint_requested)
-소요 > per_dispatch_minutes → 행 결과에 over-time 덧붙임 (auditor D가 task 유형 크기를 본다)
+소요 > per_dispatch_minutes (정했다면) → 행 결과에 over-time 덧붙임 (auditor D가 task 유형 크기를 본다)
 시도 ≥ per_task_attempt_limit 인데 APPROVED 아님 → 네가 BLOCKED:attempt-limit 로 닫는다 (worker가 뭐라 했든)
 ```
 
