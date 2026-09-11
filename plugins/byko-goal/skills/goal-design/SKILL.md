@@ -58,7 +58,8 @@ argument-hint: "[목표 한 줄 또는 기존 goal-slug]"
 ### Step 4: 캡 입력받기 (유저 결정)
 자율 루프는 fire-and-forget이라 **방어막**이 필수다. 유저에게 묻는다(추천값 제시):
 - `max_iterations` — worker dispatch(≈ task 시도) 횟수 상한 (추천: task 수 × 2 정도)
-- `max_minutes` — 벽시계 상한
+- `max_minutes` — 활성 시간 상한(정지·유휴 구간 제외)
+- `per_dispatch_minutes` — worker 한 번이 쓸 수 있는 시간 (추천 120분 — 잘 도는 목표의 task 소요 p90이 60~125분이었다. 한 task가 이 안에 검증 가능한 상태가 되는 크기여야 한다; 넘기면 상태를 남기고 다음 dispatch가 잇는다)
 
 이건 유저만 정할 수 있다(비용/시간 통제). 짧게 묻고 추천값을 제시한다.
 

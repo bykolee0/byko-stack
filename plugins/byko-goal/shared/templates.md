@@ -72,6 +72,7 @@ docs/goals/<slug>/
 - max_iterations: <N>
 - max_minutes: <M>
 - per_task_attempt_limit: 3      # task 라운드당 evaluator 회차·worker dispatch 각각의 상한
+- per_dispatch_minutes: 120      # worker 한 번의 활성 시간 상한 — worker가 dispatched_at을 읽어 스스로 지킨다
 - checkpoint_every: 4            # auditor 체크포인트 주기 (task 수)
 - major_changes_budget: 3        # 파괴적 체크리스트 변경 허용 횟수
 - stall_limit: 3                 # 연속 dispatch에 새 [x] 0 → 정지
@@ -104,7 +105,7 @@ docs/goals/<slug>/
 |------|------------|----|
 ```
 
-상태: `pending · running · done · blocked · reopened`. **시도** = `ls eval | grep -cE '^NN-[0-9]'`(드라이버가 매번 덮어쓴다 — worker 신고가 아니다). **디스패치** = 이 라운드에 띄운 worker 수(재개 포함). **분·토큰k** = Agent 결과에 붙는 소요·토큰의 라운드 누적(분 반올림, 없으면 —). **결과** 칸은 `APPROVED`·`BLOCKED:<사유>`·`unverified-done`·`기록누락`처럼 한 토막 — 경위는 history.md·eval/에. 체크포인트(auditor) 비용은 task 행이 아니라 체크포인트 기록에 — 인계 보고의 비용 요약은 둘을 합친다.
+상태: `pending · running · done · blocked · reopened`. **시도** = `ls eval | grep -cE '^NN-[0-9]'`(드라이버가 매번 덮어쓴다 — worker 신고가 아니다). **디스패치** = 이 라운드에 띄운 worker 수(재개 포함). **분·토큰k** = Agent 결과에 붙는 소요·토큰의 라운드 누적(분 반올림, 없으면 —). **결과** 칸은 `APPROVED`·`BLOCKED:<사유>`·`PARTIAL:time-budget`·`unverified-done`·`기록누락`·`over-time`처럼 한 토막 — 경위는 history.md·eval/에. 체크포인트(auditor) 비용은 task 행이 아니라 체크포인트 기록에 — 인계 보고의 비용 요약은 둘을 합친다.
 
 ---
 

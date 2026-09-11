@@ -14,6 +14,14 @@ goal-run 드라이버의 비정상 경로. 정상 루프는 `../../shared/loop-p
 
 worker가 DONE/BLOCKED/BOUNCE 없이 끝났다(maxTurns 소진, 에이전트 오류). 크래시 복구와 같은 경로다 — 디스패치 칸이 한도 안이면 새 worker(이어서 모드), 아니면 `BLOCKED:no-progress`. `stall_streak++`. 환경이 같은 worker의 재개(resume)를 지원해도 **재개 1회 = 디스패치 1회**로 센다 — 재개는 공짜가 아니다.
 
+## dispatch가 오래 돈다 (드라이버가 못 보는 구간)
+
+횟수 캡(회차·디스패치·공회전)은 dispatch가 **끝나야** 센다. dispatch 안에서 worker가 evaluator를 부르지 않은 채 몇 시간을 돌면 — 대개 디스크에 남지 않는 자기 확인의 반복이다 — 드라이버는 반환이 올 때까지 아무것도 보지 못한다. 막는 순서:
+
+1. **1차는 worker 쪽이다** — `per_dispatch_minutes`를 worker가 `dispatched_at`으로 스스로 지킨다(worker.md §3). 예산이 다 되면 evaluator로 가거나 `PARTIAL:time-budget`으로 상태를 남기고 돌아온다. 규칙은 agents/worker.md에 산다 — 드라이버가 dispatch 문구에 규칙을 즉흥으로 넣는 방식은 빠뜨리는 순간 새므로 쓰지 않는다.
+2. **2차는 드라이버의 백스톱** — 환경이 백그라운드 dispatch와 정지를 지원하면, `per_dispatch_minutes`의 2배가 지나도 반환이 없을 때 디스크(회차 파일 수·산출물 mtime)를 한 줄 명령으로 재고, 진전이 없으면 dispatch를 끊고 이어서 모드로 재디스패치한다(디스패치++). 지원하지 않으면 worker의 maxTurns가 마지막 상한이다.
+3. **반환 뒤** — 소요가 예산을 넘긴 dispatch는 행에 `over-time`으로 남는다. 같은 유형의 task가 반복해서 넘기면 auditor D가 그 유형을 미리 나눈다(C). 감시는 탐지일 뿐이고, 원인 제거는 검증의 경계(worker는 만들고 evaluator가 반증한다)와 task 크기다.
+
 ## evaluator 사망 (판정 없는 회차 파일)
 
 worker의 몫이다(worker.md §5) — 드라이버는 개입하지 않는다. 드라이버가 볼 수 있는 흔적: 최신 회차 파일의 판정이 `PENDING`인데 worker가 DONE을 반환했다 → `unverified-done`으로 거부된다(게이트). worker가 `BLOCKED:eval-budget`을 반환하면 그 task의 검증이 한 evaluator에 안 들어온다는 뜻이다 — 다음 체크포인트에서 auditor가 분할(C)한다. 같은 사유가 K회면 패턴 감지가 잡는다(조건 설계 전반의 문제 → 사람).
@@ -30,7 +38,7 @@ worker가 `BLOCKED:<사유>`를 반환하면:
 3. **다음 독립 task로 진행한다** — 막힌 task에 의존하지 않는 다른 task가 있으면 그것부터. 목표 전체를 막지 않는다.
 4. 독립 task가 더 없고 체크포인트도 요청되지 않았으면(남은 게 전부 막힌 task에 의존) 정지하고 사람을 부른다.
 
-정규화 사유별 뜻: `attempt-limit`(회차 소진) · `eval-budget`(검증이 한 evaluator에 안 들어옴 → auditor 분할) · `task-too-big`(worker가 조건을 8개 안으로 못 접음 → auditor 분할) · `no-progress`(디스패치 소진) · `unverified-done` · `spec-gap:<무엇>`(결정 누락) · `env:<도구>`(환경) · `dep:<task>`(선행 task 미완).
+정규화 사유별 뜻: `attempt-limit`(회차 소진) · `eval-budget`(검증이 한 evaluator에 안 들어옴 → auditor 분할) · `task-too-big`(worker가 조건을 8개 안으로 못 접음 → auditor 분할) · `no-progress`(디스패치 소진 — PARTIAL·턴 소진의 반복) · `unverified-done` · `spec-gap:<무엇>`(결정 누락) · `env:<도구>`(환경) · `dep:<task>`(선행 task 미완). `PARTIAL:time-budget`은 BLOCKED가 아니라 이어서 모드의 입력이다.
 
 ## 패턴 감지 — 목표 결함의 조기 발견
 
@@ -95,7 +103,7 @@ worker가 `BOUNCE:<목표결함>`을 반환하면(조건 모순, 결정 누락�
 | `history.md` 없음 + goal.md에 `## 변경 이력` | 그 섹션을 `history.md`로 이동 |
 | run-state.md에 "규약"·"집행 규칙" 섹션 | 그대로 둔다(내용 판단은 auditor D-3). 델타로 정리된다 |
 | `archive/` 없음 | 생성 |
-| 노브·카운터 누락 | 기본값으로 추가 (`status: running` · `checkpoint_requested: —` · 체크포인트 기록 표 포함) |
+| 노브·카운터 누락 | 기본값으로 추가 (`per_dispatch_minutes: 120` · `status: running` · `checkpoint_requested: —` · 체크포인트 기록 표 포함) |
 | task 상태표에 디스패치·분·토큰k 칸 없음 | 열 추가(0) |
 | 미완 task(pending/blocked/running)에 0.2식 회차 파일이 있음 | 0.2의 쪼개기 이름(`NN-partA`·`NN-c1c4`·`06a-…`)은 셀 수 없다. 미완 task의 `eval/NN*` 전부를 `archive/eval/`로 옮기고 라운드를 새로 시작한다(시도·디스패치 0). 완료 task의 파일은 그대로 둔다 |
 
