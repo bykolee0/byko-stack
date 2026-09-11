@@ -151,20 +151,22 @@ The core is a split between a **driver (long-lived, lightweight) / worker (dispo
 
 Regression and plan drift are caught in three layers — each task's evaluator also re-checks the prior tasks it touched (targeted), an `auditor` runs every `checkpoint_every` tasks to check global regression and whether the remaining checklist still holds (periodic), and a final eval inspects the whole at the end. **The goal and completion conditions are fixed**; the checklist is re-planned by the auditor as work proceeds (destructive changes are capped by a budget).
 
+Since 0.3 the harness also has a **model of cost and time**, derived from measurements across nine goals run with this plugin. ① The source of truth for verdicts and attempts is the `eval/NN-<ts>.md` file; the driver cross-checks the worker's claim against file counts and the verdict line — the party being capped never counts itself. ② The documents read on every iteration (goal · knowledge · ownership · run-state) have a read contract (who reads what, every time) and a write criterion ("will the next worker need this every time?"), and at each checkpoint the auditor moves whatever does not belong there into area files or archive/ — contract files and the append-only log (`history.md`) are never mixed. Size is not the criterion; location, form, and relevance are, and the signal is the trend of real per-task time and tokens. ③ Completion conditions must be closable by one evaluator in one attempt (3–8 conditions, folded into a single entry point where one exists, predicates with a fixed point), and harness bookkeeping is never a condition. ④ The driver measures active time and stalls; the auditor watches the per-task cost trend — measured where the cost is actually paid.
+
 **Skills**
 
 | Skill | Role |
 | --- | --- |
 | `goal-design` | Designs a long goal with the user and produces the document set (goal.md, run-state.md, knowledge.md). Decomposes the goal into session-sized tasks and sets completion conditions and caps (iterations/time). |
-| `goal-run` | The fire-and-forget driver. Spawns a worker per task until the checklist is complete or a cap is hit. Re-reads disk each iteration for lossless resume. |
+| `goal-run` | The fire-and-forget driver. Spawns a worker per task until the checklist is complete or a cap is hit, and cross-checks each result against disk (eval files, attempt counts). Re-reads disk each iteration for lossless resume; records per-task time/tokens and detects stalls. |
 
 **Subagents** (`agents/`)
 
 | Subagent | Role |
 | --- | --- |
-| `worker` | A disposable executor that completes one task end to end. Writes the completion conditions, does the work, and gets independent verification from the evaluator, revising until it passes. Fans out to explorer/sub-workers for large tasks. |
-| `evaluator` | Independently verifies a task's completion conditions in an isolated context. Distrusts the caller's claims; judges PASS/FAIL against the on-disk source of truth and direct inspection. |
-| `auditor` | Runs global regression and checklist re-validation at periodic checkpoints. Writes details to audit/ and returns only a concise delta (reopen tasks, checklist changes) to the driver. |
+| `worker` | A disposable executor that completes one task end to end. Writes the completion conditions, does the work, and gets independent verification from a single evaluator, revising until it passes (the verdict is read from the eval file). Fans out to explorer/general subagents for large tasks. |
+| `evaluator` | Independently verifies a task's completion conditions in an isolated context. Distrusts the caller's claims; judges PASS/FAIL against the on-disk source of truth and direct inspection. Writes the report first (PENDING) and updates it, so an attempt survives even if the agent dies. |
+| `auditor` | Runs global regression, checklist re-validation, and document tidying (cost trend, moving what does not belong in the every-iteration read set, retiring unfounded operating notes) at periodic checkpoints. Writes details to audit/ and returns only a concise delta to the driver. |
 | `explorer` | Read-only investigation (code analysis, web research). Reports only evidence-backed facts. |
 
 #### Default workflow
