@@ -21,7 +21,7 @@ argument-hint: "[goal-slug]"
 - goal_dir 해석: 인자(slug) > `docs/goals/*/` 탐색(1개면 사용, 복수면 최근순 제시 후 선택).
 - 프리플라이트(실패 시 루프 시작 거부):
   - `goal.md`에 완수조건 + **비어있지 않은 마스터 체크리스트**가 있는가 → 없으면 "`/goal-design`으로 설계를 마치세요"
-  - `run-state.md`에 캡(max_iterations, max_minutes)이 있는가 → 없으면 이 자리에서 한 번 입력받아 기록. 나머지 노브가 없으면 기본값으로 채운다: `per_task_attempt_limit` 3 · `checkpoint_every` 4 · `major_changes_budget` 3 · `stall_limit` 3. `per_dispatch_minutes`는 선택이라 없으면 `—`로 둔다(시간 예산 없음). 카운터(`last_tick`·`stall_streak`·`dispatched_at`·`last_checkpoint`)가 없으면 추가.
+  - `run-state.md`에 캡(max_iterations, max_minutes)이 있는가 → 없으면 이 자리에서 한 번 입력받아 기록. 나머지 노브가 없으면 기본값으로 채운다: `per_task_attempt_limit` 3 · `checkpoint_every` 4 · `major_changes_budget` 3 · `stall_limit` 3. `per_dispatch_minutes`가 없으면(구버전 목표) `—`로 두고 첫 체크포인트에서 auditor가 실측으로 채운다 — 드라이버가 값을 지어내지 않는다. 카운터(`last_tick`·`stall_streak`·`dispatched_at`·`last_checkpoint`)가 없으면 추가.
   - **구버전 문서 세트 이행**(0.2 이전에 만든 목표 — 기계적 이동, 내용 불변): `ownership.md`가 없고 run-state.md에 `## 산출물 소유 맵`이 있으면 그 섹션을 `ownership.md`로 잘라 옮긴다. `history.md`가 없고 goal.md에 `## 변경 이력`이 있으면 그 섹션을 `history.md`로 잘라 옮긴다. `archive/`가 없으면 만든다. task 상태표에 디스패치·분·토큰k 칸이 없으면 열을 추가(값 0). history.md에 `이행` 한 줄. 상세는 `references/recovery.md`.
   - **`status: complete`면 여기서 끝낸다** — 현황(완료 N/M · 최종 eval 결과 · 산출물 위치)만 보고한다. 최종 패스·최종 eval을 다시 돌리지 않는다. 사람이 다시 돌리길 원하면(재오픈·추가 task) status를 `running`으로 바꾸라고 안내한다.
   - **`last_tick = now`(초 단위)로 리셋**(더하지 않는다 — 정지해 있던 시간은 활성 시간이 아니다). `status: running`. history.md에 `재개` 한 줄(첫 실행이면 `시작`).
@@ -73,7 +73,7 @@ PARTIAL:<사유> / 반환 없음 / 턴 소진
 
 **패턴 감지**: BLOCKED 정규화 사유가 같은 값으로 K회(기본 2) 쌓이면 정지하고 사람을 부른다(목표 자체의 구조적 문제 가능). 상세는 `references/recovery.md`.
 
-**체크포인트 델타 적용 (auditor)**: auditor가 돌려준 **concise 델타만** 적용한다 — ① **재오픈**: 회귀한 task를 goal.md `[ ]`로 되돌리고 그 task의 회차 파일을 `mkdir -p archive/eval && mv eval/NN-[0-9]* archive/eval/`로 옮긴 뒤 행을 reopened/디스패치 0/시도 0으로, history.md에 한 줄 ② **체크리스트 변경**: 추가/분할/정제는 자율 적용(델타에 온 완전한 항목 줄을 그대로 붙인다 — 문안이 없으면 auditor에게 다시 요구하지 말고 그 변경은 history.md에 `제안`으로만 남긴다), 파괴적 변경(삭제/재범위/순서)은 `major_changes_used++` 후 `major_changes_budget` 초과 시 정지+사람 호출. 완료 항목의 정제는 문안만 바꾸고 상태는 그대로. 적용한 변경은 history.md에 한 줄 ③ **문서 정리**: run-state 정리 요청이 있으면 결과 칸을 한 토막으로 자른다(원문은 history.md 한 줄로); 비용 추세 악화가 보고되면 Step 3 인계 보고에 그 원인을 포함한다. auditor의 상세 근거는 `audit/`에 있으니 컨텍스트에 들이지 않는다. **목표·완수조건은 절대 바꾸지 않는다.** auditor가 `BOUNCE:<사유>`를 올리면 즉시 정지+사람 호출.
+**체크포인트 델타 적용 (auditor)**: auditor가 돌려준 **concise 델타만** 적용한다 — ① **재오픈**: 회귀한 task를 goal.md `[ ]`로 되돌리고 그 task의 회차 파일을 `mkdir -p archive/eval && mv eval/NN-[0-9]* archive/eval/`로 옮긴 뒤 행을 reopened/디스패치 0/시도 0으로, history.md에 한 줄 ② **체크리스트 변경**: 추가/분할/정제는 자율 적용(델타에 온 완전한 항목 줄을 그대로 붙인다 — 문안이 없으면 auditor에게 다시 요구하지 말고 그 변경은 history.md에 `제안`으로만 남긴다), 파괴적 변경(삭제/재범위/순서)은 `major_changes_used++` 후 `major_changes_budget` 초과 시 정지+사람 호출. 완료 항목의 정제는 문안만 바꾸고 상태는 그대로. 적용한 변경은 history.md에 한 줄 ③ **문서 정리**: run-state 정리 요청이 있으면 결과 칸을 한 토막으로 자른다(원문은 history.md 한 줄로); `per_dispatch_minutes` 갱신값이 있으면 run-state에 적고 history.md에 `캡변경` 한 줄(이 노브는 정지 캡이 아니라 넘김 신호라 auditor 갱신을 허용한다 — max_iterations·max_minutes는 사람만); 비용 추세 악화가 보고되면 Step 3 인계 보고에 그 원인을 포함한다. auditor의 상세 근거는 `audit/`에 있으니 컨텍스트에 들이지 않는다. **목표·완수조건은 절대 바꾸지 않는다.** auditor가 `BOUNCE:<사유>`를 올리면 즉시 정지+사람 호출.
 
 드라이버는 **절대 직접 task를 구현·분석하지 않는다.** 유혹이 들면(작은 task니까 내가…) 참고 worker를 띄운다. 조건 파일·핸드오프·지식 파일을 직접 편집하지도, evaluator를 직접 띄우지도 않는다(최종 eval 제외) — 그래야 네 컨텍스트가 디스패치 기록만으로 유지되고, 기록의 소유 경계가 지켜진다.
 

@@ -58,10 +58,11 @@ argument-hint: "[목표 한 줄 또는 기존 goal-slug]"
 ### Step 4: 캡 입력받기 (유저 결정)
 자율 루프는 fire-and-forget이라 **방어막**이 필수다. 유저에게 묻는다(추천값 제시):
 - `max_iterations` — worker dispatch(≈ task 시도) 횟수 상한 (추천: task 수 × 2 정도)
-- `max_minutes` — 활성 시간 상한(정지·유휴 구간 제외)
-- `per_dispatch_minutes` — 선택. worker 한 번이 쓸 수 있는 시간. 이 목표의 task가 얼마나 걸릴지 모르면 **비워 둔다**(턴·디스패치 한도만으로 유한하다) — 첫 체크포인트 뒤 run-state 상태표의 분 칸을 보고 정하면 된다. 정하면 worker는 그 안에 검증 가능한 상태로 만들거나 상태를 남기고 넘긴다. 플러그인이 추천값을 주지 않는 이유: 도메인마다 한 task의 길이가 다르다
+- `max_minutes` — 활성 시간 상한(정지·유휴 구간 제외). 추천값은 task 수 × 한 task 예상 소요 × 여유(1.5~2)로 계산해 제시한다
 
-이건 유저만 정할 수 있다(비용/시간 통제). 짧게 묻고 추천값을 제시한다.
+이건 유저만 정할 수 있다(총 비용/시간 통제). 짧게 묻고 추천값을 제시한다.
+
+`per_dispatch_minutes`(worker 한 번의 시간 상한)는 유저에게 묻지 않는다 — **범위를 아는 건 분해한 네 쪽이다.** Step 3에서 추정한 한 task 예상 소요 × 2로 정해 run-state.md에 적고, "자체 결정한 사항"에 추정 근거와 함께 보인다. 실행이 시작되면 auditor가 이 목표의 실측 소요로 갱신하므로 추정이 틀려도 오래 가지 않는다.
 
 나머지 노브는 기본값으로 두되 유저가 원하면 조정한다 — `per_task_attempt_limit`(기본 3: task 라운드당 evaluator 회차·worker dispatch 각각의 상한 — 드라이버가 디스크에서 센다), `checkpoint_every`(기본 4 task: auditor가 회귀·드리프트·문서 정리·비용 추세를 점검하는 주기), `major_changes_budget`(기본 3: auditor의 파괴적 체크리스트 변경 허용 횟수), `stall_limit`(기본 3: 연속 무진전 dispatch 수 → 정지). 전부 run-state.md에 기록한다. 캡의 정의는 `loop-protocol.md` §캡.
 

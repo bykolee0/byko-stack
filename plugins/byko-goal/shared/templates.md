@@ -72,7 +72,7 @@ docs/goals/<slug>/
 - max_iterations: <N>
 - max_minutes: <M>
 - per_task_attempt_limit: 3      # task 라운드당 evaluator 회차·worker dispatch 각각의 상한
-- per_dispatch_minutes: —        # 선택. worker 한 번의 활성 시간 상한. 비우면 없음(턴·디스패치 한도만). 첫 체크포인트의 실측 분을 보고 사람이 정한다
+- per_dispatch_minutes: <N>      # worker 한 번의 활성 시간 상한. goal-design이 task 예상 소요×2로 시드, auditor가 실측(완료 task 분 중앙값×2)으로 갱신
 - checkpoint_every: 4            # auditor 체크포인트 주기 (task 수)
 - major_changes_budget: 3        # 파괴적 체크리스트 변경 허용 횟수
 - stall_limit: 3                 # 연속 dispatch에 새 [x] 0 → 정지
@@ -167,7 +167,7 @@ docs/goals/<slug>/
 # Task NN: <제목>
 
 > worker가 작업 전 작성. evaluator가 이 파일을 정본으로 검증.
-> 완료조건 규칙(loop-protocol §완료조건): 산출물 술어만 · 3~8개 · 검증은 명령/대조 대상 · 고정점 · 하네스 기록 제외 · 진입점 하나로 접기
+> 완료조건 규칙(loop-protocol §완료조건): 산출물 술어만 · 필요한 만큼만(10개 넘으면 신호) · 검증은 명령/대조 대상 · 고정점 · 하네스 기록 제외 · 진입점 하나로 접기
 
 ## 완료조건
 | # | 조건 (산출물에 대한 술어) | 검증 (명령 / 대조 대상) |
