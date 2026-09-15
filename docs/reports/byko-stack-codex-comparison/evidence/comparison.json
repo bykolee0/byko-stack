@@ -1,0 +1,321 @@
+{
+  "scope": "One paired local full-cycle execution; not a production benchmark or implicit skill selection test.",
+  "source": {
+    "root": "/private/tmp/byko-stack-comparison-uk9fn0gs",
+    "source_head": "769e206f0c4940e6dd33edf5568597eeb349c10e",
+    "created_unix": 1789458409.652729,
+    "variants": {
+      "a": {
+        "version": "0.2.0",
+        "plugin": "/private/tmp/byko-stack-comparison-uk9fn0gs/plugin-a/byko-stack-codex",
+        "tree_sha256": "87824e6d0da8f263d99c17e8072585b1bc019217622e6404d84422549f7069f6"
+      },
+      "b": {
+        "version": "0.3.0",
+        "plugin": "/private/tmp/byko-stack-comparison-uk9fn0gs/plugin-b/byko-stack-codex",
+        "tree_sha256": "d8572483acbc044e6a3c30c7b344ae49692b09ef0fec52e04c0ad7180a2db763"
+      }
+    }
+  },
+  "initial_implementation": {
+    "workdir": "/private/tmp/byko-stack-comparison-uk9fn0gs/resume-a",
+    "passed": 4,
+    "total": 14,
+    "results": [
+      {
+        "case": "first_insert_public_json_contract",
+        "status": "PASS"
+      },
+      {
+        "case": "new_label_preserves_rows_and_max_id",
+        "status": "PASS"
+      },
+      {
+        "case": "same_label_preserves_id_bytes_mtime",
+        "status": "FAIL",
+        "error": "AssertionError: actual=2; expected=1"
+      },
+      {
+        "case": "reopen_pretty_json_preserves_bytes_mtime",
+        "status": "FAIL",
+        "error": "AssertionError: actual=43; expected=42"
+      },
+      {
+        "case": "legacy_duplicates_first_id_zero_no_rewrite",
+        "status": "FAIL",
+        "error": "AssertionError: actual=10; expected=0"
+      },
+      {
+        "case": "case_sensitive_labels",
+        "status": "FAIL",
+        "error": "AssertionError: actual=3; expected=1"
+      },
+      {
+        "case": "whitespace_sensitive_labels",
+        "status": "FAIL",
+        "error": "AssertionError: actual=4; expected=1"
+      },
+      {
+        "case": "unicode_representation_sensitive_labels",
+        "status": "FAIL",
+        "error": "AssertionError: actual=3; expected=1"
+      },
+      {
+        "case": "empty_label_preserved",
+        "status": "FAIL",
+        "error": "AssertionError: actual=3; expected=1"
+      },
+      {
+        "case": "json_escape_decodes_to_same_label",
+        "status": "FAIL",
+        "error": "AssertionError: actual=5; expected=4"
+      },
+      {
+        "case": "control_characters_preserved",
+        "status": "FAIL",
+        "error": "AssertionError: actual=3; expected=1"
+      },
+      {
+        "case": "invalid_json_failure_preserves_file",
+        "status": "PASS"
+      },
+      {
+        "case": "retry_after_other_insert",
+        "status": "FAIL",
+        "error": "AssertionError: actual=3; expected=1"
+      },
+      {
+        "case": "existing_empty_array",
+        "status": "PASS"
+      }
+    ]
+  },
+  "fullcycle": {
+    "a": {
+      "documents": {
+        "docs_count": 9,
+        "docs_lines": 270,
+        "docs_chars": 12479,
+        "docs": [
+          {
+            "path": "docs/specs/idempotent-task/ambiguity-ledger.md",
+            "lines": 29,
+            "chars": 1254
+          },
+          {
+            "path": "docs/specs/idempotent-task/eval-results/implementation-codex-evaluator-20260915.request.md",
+            "lines": 87,
+            "chars": 3897
+          },
+          {
+            "path": "docs/specs/idempotent-task/eval-results/implementation-evaluator.result.md",
+            "lines": 29,
+            "chars": 1929
+          },
+          {
+            "path": "docs/specs/idempotent-task/eval-results/implementation-gate-20260915.result.md",
+            "lines": 23,
+            "chars": 579
+          },
+          {
+            "path": "docs/specs/idempotent-task/implementation-plan.md",
+            "lines": 7,
+            "chars": 285
+          },
+          {
+            "path": "docs/specs/idempotent-task/manifest.md",
+            "lines": 36,
+            "chars": 1240
+          },
+          {
+            "path": "docs/specs/idempotent-task/progress.md",
+            "lines": 10,
+            "chars": 698
+          },
+          {
+            "path": "docs/specs/idempotent-task/spec.md",
+            "lines": 40,
+            "chars": 1886
+          },
+          {
+            "path": "docs/specs/idempotent-task/traceability.md",
+            "lines": 9,
+            "chars": 711
+          }
+        ]
+      },
+      "external_contract_checks": {
+        "workdir": "/private/tmp/byko-stack-comparison-uk9fn0gs/fullcycle-a",
+        "passed": 14,
+        "total": 14,
+        "results": [
+          {
+            "case": "first_insert_public_json_contract",
+            "status": "PASS"
+          },
+          {
+            "case": "new_label_preserves_rows_and_max_id",
+            "status": "PASS"
+          },
+          {
+            "case": "same_label_preserves_id_bytes_mtime",
+            "status": "PASS"
+          },
+          {
+            "case": "reopen_pretty_json_preserves_bytes_mtime",
+            "status": "PASS"
+          },
+          {
+            "case": "legacy_duplicates_first_id_zero_no_rewrite",
+            "status": "PASS"
+          },
+          {
+            "case": "case_sensitive_labels",
+            "status": "PASS"
+          },
+          {
+            "case": "whitespace_sensitive_labels",
+            "status": "PASS"
+          },
+          {
+            "case": "unicode_representation_sensitive_labels",
+            "status": "PASS"
+          },
+          {
+            "case": "empty_label_preserved",
+            "status": "PASS"
+          },
+          {
+            "case": "json_escape_decodes_to_same_label",
+            "status": "PASS"
+          },
+          {
+            "case": "control_characters_preserved",
+            "status": "PASS"
+          },
+          {
+            "case": "invalid_json_failure_preserves_file",
+            "status": "PASS"
+          },
+          {
+            "case": "retry_after_other_insert",
+            "status": "PASS"
+          },
+          {
+            "case": "existing_empty_array",
+            "status": "PASS"
+          }
+        ]
+      },
+      "store_sha256": "ddbaabd44daabfa454a59f8357eea966f843757892457cb4c2f89dbbd5ae29ef",
+      "source_diff_numstat": [
+        "3\t0\tstore.py",
+        "49\t0\ttests/test_store.py"
+      ],
+      "actor_tests_passed": 6,
+      "independent_design_reviews": 0,
+      "independent_implementation_reviews": 1,
+      "actor_full_suite_runs_per_execution_record": 3,
+      "user_questions": 0,
+      "remaining_required_actions": 0
+    },
+    "b": {
+      "documents": {
+        "docs_count": 2,
+        "docs_lines": 29,
+        "docs_chars": 2513,
+        "docs": [
+          {
+            "path": "docs/specs/idempotent-add-task/progress.md",
+            "lines": 12,
+            "chars": 1251
+          },
+          {
+            "path": "docs/specs/idempotent-add-task/spec.md",
+            "lines": 17,
+            "chars": 1262
+          }
+        ]
+      },
+      "external_contract_checks": {
+        "workdir": "/private/tmp/byko-stack-comparison-uk9fn0gs/fullcycle-b",
+        "passed": 14,
+        "total": 14,
+        "results": [
+          {
+            "case": "first_insert_public_json_contract",
+            "status": "PASS"
+          },
+          {
+            "case": "new_label_preserves_rows_and_max_id",
+            "status": "PASS"
+          },
+          {
+            "case": "same_label_preserves_id_bytes_mtime",
+            "status": "PASS"
+          },
+          {
+            "case": "reopen_pretty_json_preserves_bytes_mtime",
+            "status": "PASS"
+          },
+          {
+            "case": "legacy_duplicates_first_id_zero_no_rewrite",
+            "status": "PASS"
+          },
+          {
+            "case": "case_sensitive_labels",
+            "status": "PASS"
+          },
+          {
+            "case": "whitespace_sensitive_labels",
+            "status": "PASS"
+          },
+          {
+            "case": "unicode_representation_sensitive_labels",
+            "status": "PASS"
+          },
+          {
+            "case": "empty_label_preserved",
+            "status": "PASS"
+          },
+          {
+            "case": "json_escape_decodes_to_same_label",
+            "status": "PASS"
+          },
+          {
+            "case": "control_characters_preserved",
+            "status": "PASS"
+          },
+          {
+            "case": "invalid_json_failure_preserves_file",
+            "status": "PASS"
+          },
+          {
+            "case": "retry_after_other_insert",
+            "status": "PASS"
+          },
+          {
+            "case": "existing_empty_array",
+            "status": "PASS"
+          }
+        ]
+      },
+      "store_sha256": "ddbaabd44daabfa454a59f8357eea966f843757892457cb4c2f89dbbd5ae29ef",
+      "source_diff_numstat": [
+        "3\t0\tstore.py",
+        "53\t0\ttests/test_store.py"
+      ],
+      "actor_tests_passed": 6,
+      "independent_design_reviews": 1,
+      "independent_implementation_reviews": 1,
+      "actor_full_suite_runs_per_execution_record": 2,
+      "user_questions": 0,
+      "remaining_required_actions": 0
+    },
+    "code_byte_identical": true
+  },
+  "resume": {
+    "status": "EXCLUDED_FROM_OUTCOME_COMPARISON",
+    "reason": "Automatic approval review rejected additional fixture mutations as outside the current comparison/explanation request. Both runs stopped; stop points differed."
+  }
+}

@@ -1,0 +1,52 @@
+{
+  "docs_count": 9,
+  "docs_lines": 270,
+  "docs_chars": 12479,
+  "docs": [
+    {
+      "path": "docs/specs/idempotent-task/ambiguity-ledger.md",
+      "lines": 29,
+      "chars": 1254
+    },
+    {
+      "path": "docs/specs/idempotent-task/eval-results/implementation-codex-evaluator-20260915.request.md",
+      "lines": 87,
+      "chars": 3897
+    },
+    {
+      "path": "docs/specs/idempotent-task/eval-results/implementation-evaluator.result.md",
+      "lines": 29,
+      "chars": 1929
+    },
+    {
+      "path": "docs/specs/idempotent-task/eval-results/implementation-gate-20260915.result.md",
+      "lines": 23,
+      "chars": 579
+    },
+    {
+      "path": "docs/specs/idempotent-task/implementation-plan.md",
+      "lines": 7,
+      "chars": 285
+    },
+    {
+      "path": "docs/specs/idempotent-task/manifest.md",
+      "lines": 36,
+      "chars": 1240
+    },
+    {
+      "path": "docs/specs/idempotent-task/progress.md",
+      "lines": 10,
+      "chars": 698
+    },
+    {
+      "path": "docs/specs/idempotent-task/spec.md",
+      "lines": 40,
+      "chars": 1886
+    },
+    {
+      "path": "docs/specs/idempotent-task/traceability.md",
+      "lines": 9,
+      "chars": 711
+    }
+  ]
+}

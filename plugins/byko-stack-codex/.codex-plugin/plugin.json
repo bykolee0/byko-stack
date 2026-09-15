@@ -1,7 +1,7 @@
 {
   "name": "byko-stack-codex",
-  "version": "0.2.0",
-  "description": "Codex-native spec-driven development workflow skills.",
+  "version": "0.3.0",
+  "description": "목적과 방법의 설계부터 구현·독립 검토·완료까지 이어가는 Codex 스킬셋.",
   "author": {
     "name": "bykolee",
     "url": "https://github.com/bykolee0"
@@ -18,8 +18,8 @@
   "skills": "./skills/",
   "interface": {
     "displayName": "Byko Stack Codex",
-    "shortDescription": "Codex-native manifest, spec, eval, review, and implementation workflow.",
-    "longDescription": "A Codex-optimized variant of Byko Stack for manifest-centered spec design, isolated consistency evaluation, fresh-eyes problem review, and implementation through completion with progress reporting, traceability, and Codex plan/goal/subagent-aware workflows.",
+    "shortDescription": "목적 기반 설계·개발과 자동 독립 검토",
+    "longDescription": "요구사항을 포함한 목적과 방법을 문서화하고, 개발·검증·독립 리뷰까지 자동으로 연결합니다. 설계와 진행 상태로 중단·재개를 지원하며, 문서와 구현의 불일치는 설계에서 재정립합니다.",
     "developerName": "bykolee",
     "category": "Productivity",
     "capabilities": [
@@ -27,10 +27,9 @@
       "Write"
     ],
     "defaultPrompt": [
-      "Codex용 스펙을 작성해줘.",
-      "이 스펙을 구현해줘.",
-      "스펙/구현을 eval-gate로 검증해줘.",
-      "문제 정의 기준으로 fresh-eyes 리뷰해줘."
+      "개발 목적과 방법을 설계하고 검토해줘.",
+      "이 설계를 구현하고 검증·리뷰까지 진행해줘.",
+      "이 문서나 구현이 목적을 충족하는지 독립 검토해줘."
     ],
     "brandColor": "#0F766E"
   }

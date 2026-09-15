@@ -130,18 +130,21 @@ Background comes before results for one reason: that is what lets a reader know 
 
 ### byko-stack-codex
 
-A Codex-native port of the byko-stack development cycle. It keeps the main Codex session as the orchestrator and shares state through `manifest.md` plus file-backed artifacts, rather than relying on one long context.
+A Codex workflow that documents a **purpose, including its requirements**, and the **method and rationale** for achieving it. The same purpose guides design, implementation, verification, and completion. Skills specify meaningful outcomes and constraints while leaving investigation order and routine execution choices to the model.
 
-| Area | Codex direction |
+| Skill | Responsibility |
 | --- | --- |
-| Shared state | `docs/specs/<project>/manifest.md` records the problem definition, artifacts, stage status, and key decisions. |
-| Questions | Investigate code/docs first; ask only real user decisions with options and a recommendation. |
-| Eval | `codex-eval-gate` checks spec/plan/implementation consistency in an isolated context. |
-| Review | `codex-review` performs fresh-eyes review from the manifest's original problem definition. |
-| Dev | `codex-spec-dev` can proceed from a spec or from agreed requirements with lightweight ACs. |
-| Cross-check | `codex-claude-eval` is optional Claude CLI cross-validation, not the default gate. |
+| `codex-spec-designer` | Designs the purpose and method, then automatically runs independent document review and resolves findings. |
+| `codex-spec-dev` | Implements the design and continues through outcome verification, independent review, and necessary fixes. |
+| `codex-review` | Reviews whether a design can achieve its purpose, or whether an implementation actually achieves it and integrates safely. |
 
-Codex shared conventions live in `plugins/byko-stack-codex/shared/`.
+Design and development **invoke review automatically**. Users do not need to call another review command. When documents and code disagree, the designer reconciles the design and the caller updates affected documents, code, and verification before continuing. Reviewers return findings; the caller owns fixes and re-review. Design-only and review-only requests retain their original scope.
+
+New work defaults to `docs/specs/<work>/spec.md` and `progress.md`: the former holds the purpose (requirements and actual outcome criteria included), method, and rationale; the latter holds current status, remaining work, verification/review evidence, and the resume point. Split detailed material only when useful. Existing manifests, document/CI contracts, and goal state owners are reused without adding a duplicate state system.
+
+In 0.3, `codex-eval-gate` is consolidated into the document and implementation modes of `codex-review`, and `codex-claude-eval` is removed. Pass an old eval target to `codex-review` instead. Existing work artifacts remain readable and are not automatically migrated or deleted. Automatic skill selection retains its default policy.
+
+See [workflow.md](plugins/byko-stack-codex/shared/workflow.md) for shared principles and [artifacts.md](plugins/byko-stack-codex/shared/artifacts.md) for document management.
 
 ### byko-goal
 

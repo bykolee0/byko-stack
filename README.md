@@ -141,20 +141,21 @@ Claude Code 세션에서 아래 커맨드로 이 저장소를 마켓플레이스
 
 ### byko-stack-codex
 
-Codex 실행 모델에 맞춘 byko-stack 포팅이다. Claude Code의 플러그인 서브에이전트 구조를 그대로 복제하지 않고, Codex의 main session을 오케스트레이터로 두며 `manifest.md`와 파일 기반 산출물로 스킬 간 상태를 공유한다.
+요구사항을 포함한 **목적**과 그 목적을 달성할 **방법·선택 이유**를 문서화하고, 목적을 기준으로 구현·검증·완료를 판단하는 Codex 플러그인이다. 모델에게 고정된 조사 순서나 질문 형식을 강제하지 않고, 실제 결과와 중요한 계약을 명확히 한다.
 
-**핵심 차이**
-
-| 영역 | Codex 포팅 방향 |
+| 스킬 | 역할 |
 | --- | --- |
-| 상태 공유 | `docs/specs/<project>/manifest.md`가 문제 정의, 산출물, 단계 상태, 핵심 결정을 기록한다. |
-| 질문 정책 | 코드/문서로 확인 가능한 것은 직접 조사하고, 유저 결정이 필요한 경우에만 선택지+추천으로 묻는다. |
-| eval | `codex-eval-gate`가 스펙/계획/구현의 정합성을 격리 컨텍스트에서 검증한다. |
-| review | `codex-review`가 manifest의 원본 문제 정의를 기준으로 fresh-eyes 리뷰를 수행한다. |
-| 구현 | `codex-spec-dev`가 스펙이 없어도 합의된 요구와 AC로 경량 매니페스트를 만들고 구현까지 진행한다. |
-| 교차검증 | `codex-claude-eval`은 기본 평가가 아니라 Claude CLI 기반 선택 교차검증이다. |
+| `codex-spec-designer` | 목적과 방법을 설계하고 독립 문서 검토·필요한 보완까지 수행한다. |
+| `codex-spec-dev` | 설계를 구현하고 목적에 대한 검증·독립 리뷰·수정까지 이어간다. |
+| `codex-review` | 문서 모드에서는 설계가 목적을 달성할 수 있는지, 구현 모드에서는 실제 결과와 주변 영향까지 독립 검토한다. |
 
-Codex 공유 규약은 `plugins/byko-stack-codex/shared/`에 있다.
+디자인과 개발이 리뷰를 **자동으로 호출**한다. 사용자가 검토 명령을 따로 기억할 필요가 없다. 설계와 구현이 어긋나면 디자이너가 설계를 재정립하고, 영향받은 문서·코드·검증을 맞춘 뒤 이어간다. 리뷰는 발견 사항을 반환하고 호출자가 수정·재검토를 소유한다. 설계만 또는 리뷰만 요청한 경우에는 그 범위를 지킨다.
+
+새 작업의 기본 문서는 `docs/specs/<작업명>/spec.md`와 `progress.md`다. 설계 문서에는 목적(요구사항·실제 달성 조건 포함)과 방법·근거를, 진행 문서에는 현재 상태·남은 일·검증/리뷰 근거·재개 지점을 남긴다. 상세 자료는 필요할 때 분리한다. 기존 manifest·문서·CI 계약이나 goal 상태 관리자가 있으면 그 구조를 이어받고 새 상태 체계를 중복 생성하지 않는다.
+
+0.3에서는 `codex-eval-gate`를 `codex-review`의 문서·구현 모드로 통합하고 `codex-claude-eval`을 제거했다. 이전 eval 호출은 같은 대상을 `codex-review`에 전달하면 된다. 기존 작업 산출물은 계속 참조하며 자동 이관·삭제하지 않는다. 자동 스킬 선택은 기본 설정을 유지한다.
+
+공유 원칙은 [workflow.md](plugins/byko-stack-codex/shared/workflow.md), 문서 관리는 [artifacts.md](plugins/byko-stack-codex/shared/artifacts.md)를 참고한다.
 
 ### byko-goal
 

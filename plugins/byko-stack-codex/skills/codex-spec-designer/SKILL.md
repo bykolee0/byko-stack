@@ -1,138 +1,32 @@
 ---
 name: codex-spec-designer
-description: Codex에 최적화된 구현 스펙 작성 스킬. 사용자의 기능 개발, 변경 설계, 구현 명세, "스펙 작성", "설계 문서", "spec 만들어줘", "기능 설계", "구현 전에 정리" 요청에서 사용한다. 코드베이스를 먼저 분석하고, 질문은 조사 기반 선택지로 제한하며, manifest.md를 중심으로 spec/ledger/analysis 산출물을 작성한 뒤 eval-gate, review, 구현으로 이어지는 다음 단계를 제안한다.
+description: 개발할 목적과 방법 및 근거를 설계 문서로 만들고 독립 문서 검토까지 수행한다. 스펙 작성·변경 설계 또는 구현 중 설계 재정립에 사용한다.
 ---
 
-# Codex Spec Designer
+# 스펙 디자인
 
-구현자가 추가 맥락 없이 시작할 수 있는 스펙과, 다른 스킬이 이어받을 수 있는 작업 매니페스트를 만든다. 먼저 `../../shared/workflow.md`와 `../../shared/question-policy.md`를 읽고 따른다.
+[공통 원칙](../../shared/workflow.md)을 따른다. 요구사항을 포함한 목적과 그 목적을 달성할 방법을 문서화하고, 검토를 거쳐 구현의 기준으로 쓸 수 있게 한다.
 
-## Purpose
+## 설계에 필요한 판단
 
-- Main session stays as orchestrator: decisions, concise summaries, artifact writing, and handoff.
-- Codebase facts are discovered before questions are asked.
-- Work state is shared through `manifest.md`, not through fixed filenames alone.
-- Review needs the original problem, so write a clear manifest `Problem Definition` before the spec solution hardens.
+관련 코드·문서·기존 계약을 조사해 현재 문제와 변경 영향을 이해한다. 사용자의 표현에 나온 수단을 곧바로 목적으로 삼지 말고 실제로 원하는 결과를 분명히 한다. 이미 합의된 목적은 이어받고, 결과를 바꿀 중요한 모호함만 사용자와 해소한다.
 
-## Workflow
+목적에는 왜 필요한지, 개발할 동작과 요구사항, 보존할 계약, 실제 달성 조건과 확인 근거를 포함한다. 목적과 요구사항을 별도 목표로 나누지 않는다. 방법에는 어떻게 개발할지와 그 선택이 목적·코드베이스에 적합한 이유를 남긴다. 필요한 대안과 tradeoff는 설명하되 모든 선택의 후보 목록을 의무로 만들지 않는다.
 
-### 1. Resolve work directory
+목적 달성에 필요한 수준으로 구체화한다. 구현 중 합리적으로 결정할 세부 사항까지 순서대로 지시하지 않는다. 계약·데이터·배포처럼 정확성이 의존하는 제약과 순서는 명확히 남긴다. 확인된 사실, 선택한 설계, 미해결 가정을 혼동하지 않는다.
 
-Use the shared target resolution order:
+## 문서와 설계 변경
 
-1. explicit user path or project name
-2. existing `docs/specs/*/manifest.md`
-3. new `docs/specs/<project-name>/manifest.md`
+[문서 관리](../../shared/artifacts.md)에 따라 기존 문서를 갱신하거나 설계와 진행 상태를 만든다. 조사 자료는 근거가 필요하고 본문을 방해할 때 별도 파일로 연결한다.
 
-If creating a new work directory, choose a short stable project name from the request and create:
+개발 중 호출되면 문서와 코드의 불일치를 목적·원래 결정·현재 근거로 재평가한다. 올바른 설계를 재정립하고 관련 문서를 먼저 일관되게 갱신한다. 코드가 틀린 경우에는 설계를 코드에 맞춰 바꾸지 않는다.
 
-```text
-docs/specs/<project>/
-├── manifest.md
-├── spec.md
-├── ambiguity-ledger.md
-└── analysis/
-```
+변경된 설계가 계획·구현·테스트·운영 계약에 미치는 영향을 진행 상태에 남긴다. 사용자 목적이나 권한 범위를 바꾸는 결정은 임의로 확정하지 않는다. 그 결정에 의존하지 않는 조사·설계는 계속할 수 있다.
 
-If the request is too broad to choose a project name or target area, ask 1-3 narrowing questions. Otherwise proceed.
+## 자동 문서 검토와 반환
 
-### 2. Investigate before asking
+초안 또는 수정한 설계를 준비하면 [codex-review](../codex-review/SKILL.md)의 문서 모드를 자동으로 수행한다. 사용자에게 검토 명령을 따로 실행하라고 넘기지 않는다. 리뷰에는 원래 사용자 요청과 목적의 근거, 현재 설계·관련 코드 경로를 제공한다.
 
-Search with `rg`, `rg --files`, `git grep`, and focused file reads. Confirm:
+유효한 발견 사항을 반영하고 변경된 부분을 다시 검토한다. 목적과 방법의 중요한 공백·모순이 해소되고, 독립 검토 근거가 있을 때 설계가 준비됐다고 보고한다. 미결정·미검증 부분이 구현을 막으면 이유와 다음 행동을 남긴다.
 
-- existing implementation and analogous patterns
-- relevant tests, fixtures, and commands
-- callers/callees and shared data structures
-- error handling, auth, persistence, migration, logging, and observability patterns
-- project conventions that affect the requested change
-
-For broad analysis, use subagents only when the current Codex tool policy permits it. If multi-agent tools are not visible and delegation is allowed by the user's request/current policy, discover them with `tool_search`. Save detailed findings under `analysis/<topic>.md`; keep the main context to conclusions and file paths.
-
-### 3. Apply the question policy
-
-Use `../../shared/question-policy.md`.
-
-Classify every ambiguity into:
-
-- `from-code`: resolved by code/docs with file:line evidence
-- `confirmed`: answered by the user or existing artifact
-- `assumed`: adopted recommendation with basis and alternatives
-- `open`: non-blocking unknown
-- `blocking`: user decision required before a valid spec exists
-
-Ask only for blocking decisions. Questions must include 2-3 options, a recommendation, and a tradeoff. Never ask for codebase facts that can be searched.
-
-Maintain the ambiguity gate:
-
-- `blocking`: 0 before final spec
-- `assumed`: 2 or fewer
-- `open`: 3 or fewer
-
-Use `references/ambiguity-ledger.md` for the ledger shape.
-
-### 4. Write artifacts
-
-Update or create `manifest.md` first:
-
-- `Problem Definition`: 2-5 lines describing the original problem, not the chosen solution
-- `Artifacts`: relative paths and current status
-- `Key Decisions`: only durable decisions with basis
-- `Open Items`: blocking/open/assumed items
-
-Write:
-
-- `spec.md` using `references/spec-templates.md`
-- `ambiguity-ledger.md`
-- `analysis/<topic>.md` for substantial codebase findings
-
-The spec must include:
-
-- goals and non-goals
-- current-state analysis with file:line evidence
-- requirements and domain rules
-- implementation guidance matched to current code conventions
-- failure/edge cases
-- acceptance criteria with verification method for every AC
-- test strategy
-- implementation order
-- remaining non-blocking decisions
-
-Do not mark assumptions as confirmed. Do not let `[TBD]` affect implementation direction, public API, data model, security, migration, or AC meaning.
-
-### 5. Self-check before completion
-
-Before saying the spec is complete, verify:
-
-- manifest exists and references the spec/ledger/analysis artifacts
-- ledger gate passes
-- every AC is testable and has a verification method
-- codebase claims cite concrete files
-- the spec can be implemented without hidden product or architecture decisions
-
-If the gate fails, report "not complete", list the blocking decisions, and give the resume point.
-
-### 6. Handoff
-
-Finish with enough context that the user does not need to open files:
-
-```markdown
-스펙 초안을 완료했습니다.
-- manifest: docs/specs/<project>/manifest.md
-- spec: docs/specs/<project>/spec.md
-- ledger: docs/specs/<project>/ambiguity-ledger.md
-- gate: blocking 0, assumed N, open N
-
-다음 단계:
-1. `$byko-stack-codex:codex-eval-gate spec docs/specs/<project>/manifest.md`
-2. `$byko-stack-codex:codex-review spec docs/specs/<project>/manifest.md`
-3. `$byko-stack-codex:codex-spec-dev docs/specs/<project>/manifest.md`
-```
-
-Suggest only the most relevant one or two next steps unless the user asked for the full cycle.
-
-## References
-
-- `../../shared/workflow.md`
-- `../../shared/question-policy.md`
-- `references/ambiguity-ledger.md`
-- `references/spec-templates.md`
+설계만 요청받았다면 목적·방법·선택 이유와 검토 결과를 요약하고 마친다. 구현 요청 중 호출되었다면 수정된 설계와 영향 범위를 개발에 반환해 이어간다. 제품 목적 달성이나 구현 완료로 혼동해서 보고하지 않는다.

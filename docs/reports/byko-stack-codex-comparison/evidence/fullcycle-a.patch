@@ -1,0 +1,369 @@
+--- /dev/null
++++ b/docs/specs/idempotent-task/ambiguity-ledger.md
+@@ -0,0 +1,29 @@
++# Ambiguity Ledger
++
++> 프로젝트: idempotent-task
++> 최종 업데이트: 2026-09-15
++
++| # | 항목 | 상태 | 내용 요약 | 근거/출처 |
++|---|---|---|---|---|
++| 1 | goal | confirmed | 재등록의 중복 항목 방지 | REQUEST.md:1-4 |
++| 2 | scope / non-goals | confirmed | 로컬 단일 프로세스 순차 호출 | REQUEST.md:9 |
++| 3 | current-state facts | from-code | 무조건 append/write | store.py:4-10 (변경 전) |
++| 4 | desired behavior | confirmed | 정확한 label의 첫 id 반환 | REQUEST.md:4-8 |
++| 5 | data model | confirmed | JSON 배열 id/label 보존 | REQUEST.md:7 |
++| 6 | external interfaces | from-code | add_task만 존재 | AGENTS.md:3, store.py:4 |
++| 7 | failure handling | from-code | JSON/I/O 오류 전파 | store.py:6-9 (변경 전) |
++| 8 | auth / permission | from-code | 로컬 파일 API, 별도 인증 없음 | store.py:1-10 (전체 코드, 변경 전) |
++| 9 | migration / backfill | confirmed | 기존 중복 삭제/재작성 금지 | REQUEST.md:8 |
++| 10 | observability / logging | from-code | 별도 로깅 없음 | store.py:1-10 (전체 코드, 변경 전) |
++| 11 | rollout / fallback | confirmed | 외부 서비스/배포 제외 | REQUEST.md:9 |
++| 12 | acceptance criteria | confirmed | 스펙 AC-1~5 | REQUEST.md:4-8 |
++| 13 | verification method | from-code | unittest 및 실제 임시 파일 | AGENTS.md:5, tests/test_store.py:8-12 |
++
++## 게이트 상태
++- blocking: 0 / 0
++- assumed: 0 / ≤ 2
++- open: 0 / ≤ 3
++- 게이트: 통과
++
++## 변경 이력
++2026-09-15: 사용자 요구와 전체 코드 조사로 13개 항목을 분류했다.
+--- /dev/null
++++ b/docs/specs/idempotent-task/eval-results/implementation-codex-evaluator-20260915.request.md
+@@ -0,0 +1,87 @@
++# Evaluation Request
++
++## Meta
++- id: eval-20260915-implementation
++- created_at: 2026-09-15
++- evaluator: codex-eval-gate
++- mode: implementation
++
++## Neutral Context
++- problem_definition: 같은 작업을 다시 등록할 때 중복 항목이 생겨 원래 작업 추적이 어렵다. 같은 label의 순차 재등록은 첫 기존 id를 반환하며 파일 bytes와 수정 시각을 보존해야 한다.
++- key_decisions: 문자열 exact equality만 사용; 기존 중복 데이터는 배열상 첫 id 반환; 새 label은 max(id)+1 유지; 단일 프로세스 순차 호출만 대상.
++
++## Target Files
++프로젝트 루트: /private/tmp/byko-stack-comparison-uk9fn0gs/fullcycle-a
++- REQUEST.md
++- AGENTS.md
++- store.py
++- tests/test_store.py
++- docs/specs/idempotent-task/spec.md
++- docs/specs/idempotent-task/traceability.md
++- docs/specs/idempotent-task/ambiguity-ledger.md
++변경 코드: store.py, tests/test_store.py
++실행 결과: python3 -B -m unittest discover -s tests -v: 6개 통과.
++
++## Evaluation Criteria
++현재 세션의 결론을 증거로 삼지 말고 코드와 테스트를 직접 읽는다. FAIL 전 정확한 코드 근거를 다시 확인한다. 모든 AC 구현, 무관한 동작 부재, 비목표 준수, 계약 중심 테스트, 기존 테스트 보존, 오류/빈 값/경계/상태 전이, 주변 패턴과 보안 노출을 확인한다. migration/backfill/운영 요구는 해당하는 경우만 평가한다. 근거 없는 스타일 제안이나 범위 확대는 제외한다.
++
++## Source Documents
++
++### spec.md
++
++# 작업 재등록 멱등성 스펙
++
++## 목표와 배경
++재등록으로 항목과 id가 늘어나 원래 작업을 잃는 문제를 해결한다. 동일 label의 첫 번째 id를 안정적으로 반환하고 중복 호출은 파일을 쓰지 않는다.
++
++## 범위와 비목표
++`store.add_task(path, label)`의 로컬 단일 프로세스 순차 호출이 범위다. 동시 쓰기 제어, 외부 서비스, 배포, 데이터 정리와 마이그레이션은 제외한다.
++
++## 현행 분석 요약
++구현 변경 전 기준: `store.py:4-10`이 public API 전체다. `store.py:5-6`에서 Path 변환과 매 호출 JSON 읽기를 수행하고, `store.py:7-9`에서 최대 id 다음 값을 추가하고 무조건 쓴다. `tests/test_store.py:8-12`는 새 파일의 첫 항목만 검증한다. `AGENTS.md:3-5`에 표준 라이브러리와 실제 임시 파일 기반 unittest 실행 규칙이 있다. 호출자·인증·로깅·외부 연동은 현재 전체 코드에 없다.
++
++## 도메인 규칙과 구현 상세
++JSON 배열 순서대로 `row["label"] == label`을 비교한다. 일치하면 해당 `row["id"]`를 즉시 반환한다. 비교 전후 trim, casefold, Unicode normalization은 수행하지 않는다. 일치하지 않을 때만 기존 max(id)+1, append, JSON 쓰기를 수행한다. 함수 signature와 id/label field를 보존한다. 캐시를 도입하지 않고 매번 디스크에서 읽는다.
++
++## 실패 및 경계 조건
++- 파일 없음과 빈 배열은 id 1로 새 항목을 만든다.
++- 기존 중복 label이 있으면 최소 id가 아닌 배열상 첫 id를 반환한다.
++- 대소문자, 앞뒤 공백, Unicode 정규화 표현 차이는 별도 label이다.
++- JSON 파싱 및 파일 I/O 오류는 기존처럼 전파한다. 유효하지 않은 schema의 새 지원은 범위 밖이다.
++- 중복 호출 시 파일의 bytes와 mtime_ns를 모두 보존한다.
++
++## Acceptance Criteria
++| ID | Acceptance Criteria | 검증 방법 |
++|---|---|---|
++| AC-1 | 동일 label 재호출은 첫 기존 id 반환, 항목 수 유지; 새 Path로 다시 열어도 동일 | 실제 임시 파일의 반복 호출과 JSON 배열 확인 |
++| AC-2 | 중복 호출에서 파일 bytes와 수정 시각 보존 | 비표준 공백 JSON 및 과거 mtime 설정 후 bytes/mtime_ns 비교 |
++| AC-3 | 대소문자·공백·Unicode 표현이 다른 label은 별도 항목 | A/a/앞뒤 공백/빈 문자열/NFC·NFD 문자열 입력과 반복 확인 |
++| AC-4 | 새 label은 max(id)+1; API·JSON 형식·기존 항목 보존 | 빈 배열 및 비정렬·비연속 id fixture에서 반환값과 전체 배열 확인 |
++| AC-5 | 기존 중복 label은 배열상 첫 id 반환, 삭제·재작성 없음 | 첫 id가 최소 id가 아닌 fixture에서 반환값과 파일 snapshot 확인 |
++
++## 테스트 전략
++프로젝트의 unittest와 TemporaryDirectory를 사용한다. 테스트를 구현 전에 실행해 요구사항 위반을 확인하고, 구현 후 전체 suite를 실행한다. 고정된 과거 mtime을 설정해 timestamp 해상도 때문에 rewrite가 숨는 경우를 피한다. 새 의존성은 추가하지 않는다.
++
++## 구현 순서
++1. AC별 실제 파일 회귀 테스트를 추가한다.
++2. JSON을 읽은 직후 첫 label 일치의 반환 분기를 추가한다.
++3. 전체 테스트와 변경 범위 확인, AC 근거를 기록한다.
++
++## 이슈 및 결정 사항
++모든 제품 동작은 REQUEST.md에서 확정됐다. 남은 결정과 가정은 없다.
++
++### traceability.md
++
++# AC 추적표
++
++| AC ID | AC | Implementation step | Files | Verification | Status |
++|---|---|---|---|---|---|
++| AC-1 | 재등록 첫 id와 항목 수 유지 | 1,2,3 | store.py, tests/test_store.py | test_repeat_reopens_without_writing | pass |
++| AC-2 | 중복 시 bytes/mtime 유지 | 1,2,3 | store.py, tests/test_store.py | test_existing_duplicates_keep_first_and_file | pass |
++| AC-3 | 정확한 문자열만 동일 | 1,2,3 | store.py, tests/test_store.py | test_exact_labels_remain_distinct | pass |
++| AC-4 | 새 id/기존 데이터/API 유지 | 1,2,3 | store.py, tests/test_store.py | test_add_new, test_empty_array, test_new_label_uses_max_id | pass |
++| AC-5 | 기존 중복 첫 id/데이터 보존 | 1,2,3 | store.py, tests/test_store.py | test_existing_duplicates_keep_first_and_file | pass |
++
++## Required Output
++APPROVED / NEEDS_REVISION / BLOCKED, confidence high/medium/low, FAIL/WARN/PASS 분류, FAIL마다 file:line 근거를 기록한다.
++결과를 docs/specs/idempotent-task/eval-results/implementation-evaluator.result.md에 작성한다. 제품 코드·다른 문서는 수정하지 않는다.
+--- /dev/null
++++ b/docs/specs/idempotent-task/eval-results/implementation-evaluator.result.md
+@@ -0,0 +1,29 @@
++# 구현 독립 평가
++
++- 판정: **APPROVED**
++- confidence: **high**
++- 분류: FAIL 0 / WARN 0 / PASS 7
++- 평가 범위: 제공된 fixture의 REQUEST.md, AGENTS.md, store.py, tests/test_store.py, spec.md, traceability.md, ambiguity-ledger.md를 직접 읽었다. 요청문에 기록된 기존 실행 결과는 판정 근거로 대신 사용하지 않았다.
++
++## PASS 근거
++
++| 분류 | 평가 항목 | 직접 확인한 근거 |
++|---|---|---|
++| PASS | AC-1 재등록 id 및 항목 수 보존 | `store.py:6-9`에서 호출마다 파일을 읽고 배열상 첫 label 일치의 id를 즉시 반환한다. `tests/test_store.py:15-24`는 새 Path 객체를 만드는 3회 재호출, id, 전체 배열을 확인한다. |
++| PASS | AC-2 파일 bytes 및 mtime 보존 | 중복 반환은 `store.py:12`의 쓰기보다 앞선다. `tests/test_store.py:26-33`은 비표준 공백 JSON과 과거 mtime을 설정하고 bytes/mtime_ns를 모두 비교한다. 재등록 테스트도 같은 snapshot 검증을 수행한다. |
++| PASS | AC-3 정확한 문자열 비교 | `store.py:8`의 문자열 equality에는 정규화가 없다. `tests/test_store.py:35-46`은 대소문자, 앞뒤 공백, 빈 문자열, NFC/NFD를 별도 항목으로 등록한 뒤 각각 재등록한다. |
++| PASS | AC-4 새 항목 계약 보존 | `store.py:4-6,10-13`은 API, Path 변환, max(id)+1, JSON 배열과 id/label field를 유지한다. `tests/test_store.py:9-13,48-61`은 파일 없음, 빈 배열, 비정렬·비연속 id, 문자열 path와 기존 배열 보존을 검증한다. |
++| PASS | AC-5 기존 중복의 첫 id 반환 | `store.py:7-9`는 배열 순서를 따른다. `tests/test_store.py:29-33`은 첫 id 9와 뒤의 작은 id 2로 최소 id 선택 오류를 구분하며 파일 snapshot도 확인한다. |
++| PASS | 실패 경로와 디스크 상태 반영 | `store.py:6,12`는 JSON/I/O 예외를 잡지 않는다. 별도 실제 임시 파일 검증에서 파싱 오류, 읽기 오류, 쓰기 오류 전파와 호출 사이 파일 변경 후 새 id 반환을 확인했다. |
++| PASS | 범위와 프로젝트 패턴 준수 | 제품 구현은 표준 라이브러리 기반 단일 API이며 새로운 외부 연동, 의존성, 로그나 보안 노출을 추가하지 않는다. 테스트는 실제 임시 파일과 unittest를 사용한다. 기존 첫 등록 테스트가 포함되어 있고 AC 추적표의 테스트 이름과 실제 테스트가 일치한다. 데이터 정리, migration, 동시 쓰기, 배포는 요청에 따라 비대상이다. |
++
++## 실행한 검증
++
++- `python3 -B -m unittest discover -s tests -v`: **6개 통과**, exit code 0.
++- 파일을 추가하지 않는 별도 `python3 -B` 검증: 잘못된 JSON의 예외 및 bytes 보존, 디렉터리 읽기 오류 전파, 없는 부모 디렉터리 쓰기 오류 전파, 호출 사이 디스크 내용 변경 반영 모두 통과, exit code 0.
++
++## 한계
++
++현재 파일과 직접 실행 결과를 평가했다. 변경 전 snapshot은 제공된 fixture에서 별도로 확인하지 않아 기존 테스트의 변경 이력을 독립 비교하거나 구현 전 실패 실행을 재현하지는 않았다. 이는 현재 요구사항 충족 판정을 막지 않는다. 동시 호출과 잘못된 schema 지원은 명시적 비목표로 평가하지 않았다.
++
++제품 코드와 다른 문서는 수정하지 않았다.
+--- /dev/null
++++ b/docs/specs/idempotent-task/eval-results/implementation-gate-20260915.result.md
+@@ -0,0 +1,23 @@
++# Eval-Gate Result: implementation
++
++## Verdict: APPROVED
++- confidence: high
++- self_gate: pass
++- evaluation_context: codex-subagent
++
++## Detail Files
++- evaluator: implementation-evaluator.result.md
++- request: implementation-codex-evaluator-20260915.request.md
++- claude-eval: not-run
++
++## Accepted Findings
++없음. 독립 evaluator가 AC-1~5 구현과 테스트를 직접 확인했다. unittest 6개 및 JSON/I/O 오류 전파·디스크 변경 반영 추가 검증이 통과했다.
++
++## Rejected Findings
++없음.
++
++## Needs Follow-up
++없음. evaluator는 변경 전 snapshot을 별도 검증하지 않았다. 구현 전 3개 실패 기록은 구현 세션의 근거이며 독립 재현 결과로 표시하지 않는다.
++
++## Next Step
++사용자의 설계·구현·검증 요청 완료. 추가 조치 없음.
+--- /dev/null
++++ b/docs/specs/idempotent-task/implementation-plan.md
+@@ -0,0 +1,7 @@
++# 구현 계획
++
++- [x] 1. tests/test_store.py에 AC-1~5를 실제 임시 파일로 검증하는 테스트 추가, 변경 전 실패 확인.
++- [x] 2. store.py에서 읽기 직후 배열 순서대로 정확한 label 비교 후 id 반환.
++- [x] 3. python3 -B -m unittest discover -s tests -v 실행, traceability와 progress 갱신.
++
++새 API, dependency, schema, 쓰기 경로 변경은 필요하지 않다. 기존 오류 전파는 유지한다.
+--- /dev/null
++++ b/docs/specs/idempotent-task/manifest.md
+@@ -0,0 +1,36 @@
++# Work Manifest: idempotent-task
++
++> work_dir: docs/specs/idempotent-task/
++> last_updated: 2026-09-15 (codex-eval-gate)
++
++## Problem Definition
++같은 작업을 다시 등록할 때 중복 항목이 생겨 원래 작업 추적이 어렵다.
++같은 label의 순차 재등록은 첫 번째 기존 id를 반환하고 파일 내용과 수정 시각을 보존해야 한다.
++문자열이 다른 작업과 기존 데이터는 보존해야 한다.
++
++## Artifacts
++| Artifact | Path | Status |
++|---|---|---|
++| spec | spec.md | complete |
++| ambiguity ledger | ambiguity-ledger.md | blocking 0 / assumed 0 / open 0 |
++| code analysis | spec.md | complete; 작은 코드 전체 분석을 현행 분석에 포함 |
++| implementation plan | implementation-plan.md | complete |
++| traceability | traceability.md | pass |
++| progress | progress.md | complete |
++| eval request | eval-results/implementation-codex-evaluator-20260915.request.md | complete |
++| evaluator result | eval-results/implementation-evaluator.result.md | APPROVED |
++| eval gate result | eval-results/implementation-gate-20260915.result.md | APPROVED |
++
++## Stage Status
++- [x] spec design
++- [x] implementation
++- [x] implementation eval
++
++## Key Decisions
++- 정확한 문자열 동등성만 사용한다. REQUEST.md 요구사항.
++- 기존 중복은 첫 번째 항목의 id를 반환하며 파일을 수정하지 않는다. REQUEST.md 요구사항.
++- 새 작업의 JSON 형식과 max(id)+1 규칙을 유지한다. REQUEST.md 및 변경 전 store.py:7-9 (변경 후 store.py:10-12).
++- 단일 프로세스 순차 호출만 대상이다. REQUEST.md.
++
++## Open Items
++없음.
+--- /dev/null
++++ b/docs/specs/idempotent-task/progress.md
+@@ -0,0 +1,10 @@
++# 진행 기록
++
++- spec-designer: manifest/spec/ledger 작성, blocking 0 / assumed 0 / open 0. 모든 AC에 검증 방법이 있다.
++- spec-dev readiness: 파일 2개와 AGENTS.md 재확인. git status에 기존 수정 없음. API/schema 방향 충돌과 승인 필요 부작용 없음.
++- 회귀 테스트 추가 후 `python3 -B -m unittest discover -s tests -v`: 6개 중 3개 실패. 반복 호출 2 != 1, 기존 중복 10 != 9, 정확한 label 재호출 8 != 1.
++- store.py에 첫 동일 label의 id를 반환하는 3줄 추가.
++- 같은 명령 재실행: 6개 모두 통과. `git diff --check`: 통과.
++- AC-1~5 pass. 기존 쓰기/오류 전파 경로는 그대로이며 새 API·의존성·schema 변경 없음.
++- 구현 self-gate 통과: spec/AC, 변경 파일, 테스트 결과와 모든 AC 추적 존재.
++- 독립 implementation eval 완료: codex-subagent, APPROVED/high, FAIL 0 / WARN 0. evaluator가 unittest 6개와 JSON/I/O 오류 전파·디스크 변경 반영을 직접 검증했다. 게이트 결과와 manifest 갱신 완료. 남은 작업 없음.
+--- /dev/null
++++ b/docs/specs/idempotent-task/spec.md
+@@ -0,0 +1,40 @@
++# 작업 재등록 멱등성 스펙
++
++## 목표와 배경
++재등록으로 항목과 id가 늘어나 원래 작업을 잃는 문제를 해결한다. 동일 label의 첫 번째 id를 안정적으로 반환하고 중복 호출은 파일을 쓰지 않는다.
++
++## 범위와 비목표
++`store.add_task(path, label)`의 로컬 단일 프로세스 순차 호출이 범위다. 동시 쓰기 제어, 외부 서비스, 배포, 데이터 정리와 마이그레이션은 제외한다.
++
++## 현행 분석 요약
++구현 변경 전 기준: `store.py:4-10`이 public API 전체다. `store.py:5-6`에서 Path 변환과 매 호출 JSON 읽기를 수행하고, `store.py:7-9`에서 최대 id 다음 값을 추가하고 무조건 쓴다. `tests/test_store.py:8-12`는 새 파일의 첫 항목만 검증한다. `AGENTS.md:3-5`에 표준 라이브러리와 실제 임시 파일 기반 unittest 실행 규칙이 있다. 호출자·인증·로깅·외부 연동은 현재 전체 코드에 없다.
++
++## 도메인 규칙과 구현 상세
++JSON 배열 순서대로 `row["label"] == label`을 비교한다. 일치하면 해당 `row["id"]`를 즉시 반환한다. 비교 전후 trim, casefold, Unicode normalization은 수행하지 않는다. 일치하지 않을 때만 기존 max(id)+1, append, JSON 쓰기를 수행한다. 함수 signature와 id/label field를 보존한다. 캐시를 도입하지 않고 매번 디스크에서 읽는다.
++
++## 실패 및 경계 조건
++- 파일 없음과 빈 배열은 id 1로 새 항목을 만든다.
++- 기존 중복 label이 있으면 최소 id가 아닌 배열상 첫 id를 반환한다.
++- 대소문자, 앞뒤 공백, Unicode 정규화 표현 차이는 별도 label이다.
++- JSON 파싱 및 파일 I/O 오류는 기존처럼 전파한다. 유효하지 않은 schema의 새 지원은 범위 밖이다.
++- 중복 호출 시 파일의 bytes와 mtime_ns를 모두 보존한다.
++
++## Acceptance Criteria
++| ID | Acceptance Criteria | 검증 방법 |
++|---|---|---|
++| AC-1 | 동일 label 재호출은 첫 기존 id 반환, 항목 수 유지; 새 Path로 다시 열어도 동일 | 실제 임시 파일의 반복 호출과 JSON 배열 확인 |
++| AC-2 | 중복 호출에서 파일 bytes와 수정 시각 보존 | 비표준 공백 JSON 및 과거 mtime 설정 후 bytes/mtime_ns 비교 |
++| AC-3 | 대소문자·공백·Unicode 표현이 다른 label은 별도 항목 | A/a/앞뒤 공백/빈 문자열/NFC·NFD 문자열 입력과 반복 확인 |
++| AC-4 | 새 label은 max(id)+1; API·JSON 형식·기존 항목 보존 | 빈 배열 및 비정렬·비연속 id fixture에서 반환값과 전체 배열 확인 |
++| AC-5 | 기존 중복 label은 배열상 첫 id 반환, 삭제·재작성 없음 | 첫 id가 최소 id가 아닌 fixture에서 반환값과 파일 snapshot 확인 |
++
++## 테스트 전략
++프로젝트의 unittest와 TemporaryDirectory를 사용한다. 테스트를 구현 전에 실행해 요구사항 위반을 확인하고, 구현 후 전체 suite를 실행한다. 고정된 과거 mtime을 설정해 timestamp 해상도 때문에 rewrite가 숨는 경우를 피한다. 새 의존성은 추가하지 않는다.
++
++## 구현 순서
++1. AC별 실제 파일 회귀 테스트를 추가한다.
++2. JSON을 읽은 직후 첫 label 일치의 반환 분기를 추가한다.
++3. 전체 테스트와 변경 범위 확인, AC 근거를 기록한다.
++
++## 이슈 및 결정 사항
++모든 제품 동작은 REQUEST.md에서 확정됐다. 남은 결정과 가정은 없다.
+--- /dev/null
++++ b/docs/specs/idempotent-task/traceability.md
+@@ -0,0 +1,9 @@
++# AC 추적표
++
++| AC ID | AC | Implementation step | Files | Verification | Status |
++|---|---|---|---|---|---|
++| AC-1 | 재등록 첫 id와 항목 수 유지 | 1,2,3 | store.py, tests/test_store.py | test_repeat_reopens_without_writing | pass |
++| AC-2 | 중복 시 bytes/mtime 유지 | 1,2,3 | store.py, tests/test_store.py | test_existing_duplicates_keep_first_and_file | pass |
++| AC-3 | 정확한 문자열만 동일 | 1,2,3 | store.py, tests/test_store.py | test_exact_labels_remain_distinct | pass |
++| AC-4 | 새 id/기존 데이터/API 유지 | 1,2,3 | store.py, tests/test_store.py | test_add_new, test_empty_array, test_new_label_uses_max_id | pass |
++| AC-5 | 기존 중복 첫 id/데이터 보존 | 1,2,3 | store.py, tests/test_store.py | test_existing_duplicates_keep_first_and_file | pass |
+--- a/store.py
++++ b/store.py
+@@ -4,6 +4,9 @@
+ def add_task(path, label):
+     path = Path(path)
+     rows = json.loads(path.read_text()) if path.exists() else []
++    for row in rows:
++        if row["label"] == label:
++            return row["id"]
+     task_id = max((row["id"] for row in rows), default=0) + 1
+     rows.append({"id": task_id, "label": label})
+     path.write_text(json.dumps(rows, ensure_ascii=False))
+--- a/tests/test_store.py
++++ b/tests/test_store.py
+@@ -1,4 +1,5 @@
+ import json
++import os
+ import tempfile
+ import unittest
+ from pathlib import Path
+@@ -10,3 +11,51 @@
+             path = Path(d) / "tasks.json"
+             self.assertEqual(add_task(path, "A"), 1)
+             self.assertEqual(json.loads(path.read_text()), [{"id": 1, "label": "A"}])
++
++    def test_repeat_reopens_without_writing(self):
++        with tempfile.TemporaryDirectory() as d:
++            path = Path(d) / "tasks.json"
++            task_id = add_task(path, "A")
++            os.utime(path, ns=(1_000_000_000, 1_000_000_000))
++            before = (path.read_bytes(), path.stat().st_mtime_ns)
++            for _ in range(3):
++                self.assertEqual(add_task(Path(str(path)), "A"), task_id)
++                self.assertEqual((path.read_bytes(), path.stat().st_mtime_ns), before)
++            self.assertEqual(json.loads(path.read_text()), [{"id": 1, "label": "A"}])
++
++    def test_existing_duplicates_keep_first_and_file(self):
++        with tempfile.TemporaryDirectory() as d:
++            path = Path(d) / "tasks.json"
++            path.write_text('[ {"id": 9, "label": "A"},\n {"id": 2, "label": "A"} ]\n')
++            os.utime(path, ns=(1_000_000_000, 1_000_000_000))
++            before = (path.read_bytes(), path.stat().st_mtime_ns)
++            self.assertEqual(add_task(path, "A"), 9)
++            self.assertEqual((path.read_bytes(), path.stat().st_mtime_ns), before)
++
++    def test_exact_labels_remain_distinct(self):
++        with tempfile.TemporaryDirectory() as d:
++            path = Path(d) / "tasks.json"
++            labels = ["A", "a", " A", "A ", "", "é", "e\u0301"]
++            for task_id, label in enumerate(labels, 1):
++                self.assertEqual(add_task(path, label), task_id)
++            for task_id, label in enumerate(labels, 1):
++                self.assertEqual(add_task(path, label), task_id)
++            self.assertEqual(json.loads(path.read_text()), [
++                {"id": task_id, "label": label}
++                for task_id, label in enumerate(labels, 1)
++            ])
++
++    def test_empty_array(self):
++        with tempfile.TemporaryDirectory() as d:
++            path = Path(d) / "tasks.json"
++            path.write_text("[]")
++            self.assertEqual(add_task(path, "A"), 1)
++            self.assertEqual(json.loads(path.read_text()), [{"id": 1, "label": "A"}])
++
++    def test_new_label_uses_max_id(self):
++        with tempfile.TemporaryDirectory() as d:
++            path = Path(d) / "tasks.json"
++            rows = [{"id": 9, "label": "A"}, {"id": 2, "label": "A"}]
++            path.write_text(json.dumps(rows))
++            self.assertEqual(add_task(str(path), "B"), 10)
++            self.assertEqual(json.loads(path.read_text()), rows + [{"id": 10, "label": "B"}])

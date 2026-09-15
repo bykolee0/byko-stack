@@ -1,93 +1,43 @@
-# byko-stack-codex workflow convention
+# 목적을 기준으로 일하기
 
-All byko-stack-codex skills follow this document when triggered.
+## 목적과 완료
 
-## Main session as orchestrator
+목적은 작업을 통해 실제로 이루려는 결과다. 왜 필요한지, 무엇을 개발하며 어떤 요구사항을 충족해야 하는지, 어떤 실제 상태가 달성을 의미하는지를 포함한다. 요구사항과 완료 기준을 목적에서 분리해 독립적인 목표처럼 다루지 않는다.
 
-The main Codex session owns conversation, decisions, tool orchestration, final integration, and user reporting. Keep large analysis, independent evaluation, and parallel implementation in isolated contexts when current tool policy allows it.
+사용자가 제시한 행동이 어떤 결과를 위한 수단인지 파악한다. 목적이 불명확하면 사용자와 명확히 하고 기록한다. 이미 대화와 문서에서 정한 목적은 이어받으며 확인 절차를 다시 만들지 않는다.
 
-| Work | Preferred owner |
-|------|-----------------|
-| User conversation and final decisions | main session |
-| Small checks over 1-2 files | main session |
-| Broad codebase exploration | isolated explorer subagent, or file-backed local analysis if subagents are unavailable |
-| Consistency evaluation for spec/plan/implementation | isolated evaluator subagent |
-| Fresh-eyes problem review | isolated reviewer subagent |
-| Independent implementation slices | worker subagents with disjoint file ownership |
+같은 목적이 문서 판단, 방법 선택, 구현, 검증, 완료의 기준이다. 문서 작성·등록·API 성공·테스트 통과 등 수단의 실행만으로 목적 달성을 선언하지 않는다. 실제 결과가 목적에 포함된 요구사항과 달성 조건을 충족하는 근거를 확인한다. 확인하지 못했다면 수행한 일, 미달성 결과, 필요한 다음 일을 구분한다.
 
-Subagent rules:
+설계만 요청받았다면 검토된 설계를 완성하는 것이 이번 요청의 범위다. 이를 최종 제품 목적까지 달성했다는 뜻으로 보고하지 않는다. 문서에 남긴 제품 목적은 이후 구현과 검증에도 이어진다.
 
-1. Exchange through files. Save detailed output under `analysis/`, `eval-results/`, `review-results/`, or progress files. Keep only decisions and short summaries in the main context.
-2. Inject minimal neutral context: problem definition, key decisions from the manifest, target paths, and output path. Do not leak expected conclusions to evaluator or reviewer agents.
-3. Spawn only when the active Codex tool policy permits it. If multi-agent tools are not loaded, use `tool_search` to discover them. If policy blocks delegation, continue with scoped local work where safe, or mark eval/review as `BLOCKED` rather than pretending it was independent.
-4. Never trust subagent findings blindly. The main session rechecks concrete FAIL/CONCERN evidence before accepting, rejecting, or routing follow-up.
+## 사용자 범위와 판단
 
-## Work manifest
+사용자의 요청과 이미 주어진 권한을 우선한다. 목적과 허용된 변경 범위 안의 설계·구현 선택은 근거를 남겨 결정한다. 방법을 설계해 달라는 요청에서 아직 방법이 정해지지 않았다는 사실 자체를 사용자 승인 대기로 바꾸지 않는다. 선택한 방법과 확인된 사실은 구분한다.
 
-Each work unit should have a `manifest.md` as the shared interface between skills. Do not hard-code a single required spec filename as the workflow contract.
+목적이 불명확하거나, 선택이 합의된 요구사항·보존할 계약·허용 범위를 바꾸거나, 사용자만 알 수 있는 사실에 의존하면 조사 후 필요한 결정을 묻는다. 질문 형식, 가정 개수, 조사 순서, agent 수를 고정하지 않는다.
 
-Default location: `docs/specs/<project-name>/manifest.md`.
+자동 검토와 수정은 요청된 일을 완성하는 과정이다. 구현까지 요청했다면 통상적인 설계·수정·재검증마다 다시 호출이나 승인을 요구하지 않는다. 설계만 또는 리뷰만 요청했다면 그 범위를 지킨다. 스킬 실행이 외부 게시·배포·데이터 변경의 권한을 새로 주지는 않는다.
 
-Target resolution order:
+## 스킬의 연결
 
-1. Use an explicit user path first. It may be a manifest, spec, plan, result file, or changed path.
-2. If no path is given, search `docs/specs/*/manifest.md`. Use the only match; if there are several, present the most relevant/recent candidates and ask the user to choose.
-3. If no manifest exists, artifact-producing skills create one. Evaluation/review skills may run from explicit paths and update a manifest only if one can be found or safely created next to the target.
+| 현재 작업 | 완료 전에 연결할 작업 |
+|---|---|
+| 디자인 | `codex-review`의 문서 검토를 자동 수행하고 유효한 발견 사항을 반영한다. |
+| 개발 | 목적에 대한 검증 후 `codex-review`의 구현 리뷰를 자동 수행하고 필요한 수정·재검증을 이어간다. |
+| 설계와 코드의 불일치 | `codex-spec-designer`로 관련 설계를 재정립하고, 변경된 문서의 검토와 영향받은 구현·검증을 이어간다. |
 
-Template:
+스킬 호출은 해당 `SKILL.md`를 읽고 그 역할을 수행하는 것을 뜻한다. 특정 slash-command 실행 도구를 가정하지 않는다. 재호출할 때도 현재 작업·목적·권한을 유지한다.
 
-```markdown
-# Work Manifest: <project-name>
+리뷰어는 발견 사항과 근거를 반환한다. 호출한 디자인·개발이 수정과 재검토를 소유한다. 리뷰어가 다시 디자이너나 개발자를 호출하는 재귀 루프는 만들지 않는다. 문서와 구현을 모두 검토한다는 이유로 같은 평가를 두 번 반복하지 않는다.
 
-> work_dir: docs/specs/<project-name>/
-> last_updated: YYYY-MM-DD HH:MM (<skill-name>)
+수정이 생기면 이전 검토에서 무엇이 더 이상 유효하지 않은지 판단하고 관련 부분을 다시 확인한다. 목적·방법 변경은 의존하는 계획, 코드, 테스트, 운영 문서까지 추적한다. CI가 검사하는 문서 계약도 유지한다. 구현을 통과시키려고 목적이나 기대 결과를 낮추지 않는다.
 
-## Problem Definition
-<2-5 lines describing the original problem before the spec solution. Review uses this as its anchor.>
+검토를 별도 사용자 할 일로 넘기지 않는다. 유효한 문제가 해소되고 목적 달성의 근거가 충분하면 마친다. 새 근거 없이 같은 수정과 평가가 반복되면 원인을 조사하고, 해결에 필요한 결정·접근권한·검증 환경이 없을 때만 그 경계와 재개 지점을 남긴다.
 
-## Artifacts
-| Artifact | Path | Status |
-|----------|------|--------|
-| spec | spec.md | draft |
-| ambiguity ledger | ambiguity-ledger.md | blocking 0 / assumed N / open N |
-| code analysis | analysis/ | partial |
-| implementation plan | implementation-plan.md | - |
-| traceability | traceability.md | - |
-| progress | progress.md | - |
-| eval results | eval-results/ | - |
-| review results | review-results/ | - |
+## 상태와 실행 환경
 
-## Stage Status
-- [ ] spec design
-- [ ] spec eval
-- [ ] spec review
-- [ ] implementation
-- [ ] implementation eval
-- [ ] implementation review
+설계와 재개에 필요한 상태를 문서로 보존한다. 경로 선택·기존 산출물 연결·새 문서 작성에는 [문서 관리](artifacts.md)를 사용한다. 자세한 조사나 검토 결과는 필요할 때 분리하고, 매 작업에 요청서·ledger·추적표 세트를 만들지 않는다.
 
-## Key Decisions
-<Decision + basis, one per line. Keep this suitable for subagent context injection.>
+직접 실행과 위임은 작업에 맞게 선택한다. 독립 검토는 리뷰 스킬의 격리 조건을 따른다. 작업을 나누면 공유 파일의 수정 책임을 정하고 결과를 통합한다.
 
-## Open Items
-<blocking/open/assumed items and meaningful TBDs.>
-```
-
-Artifact paths are relative to the manifest directory. Stages are not a forced pipeline; record only what exists and what happened.
-
-Update responsibility: any skill that creates an artifact or changes a stage result updates the manifest before finishing.
-
-## Handoff
-
-Each skill ends by suggesting one or two natural next steps from manifest state. Do not force the pipeline.
-
-| Just completed | Natural next suggestions |
-|----------------|--------------------------|
-| Spec draft | `codex-eval-gate spec` or `codex-review spec`, then `codex-spec-dev` |
-| Plan | `codex-eval-gate plan` or implementation |
-| Implementation | `codex-eval-gate implementation` and/or `codex-review implementation` |
-| Eval NEEDS_REVISION | return to `codex-spec-designer` or `codex-spec-dev`, depending on the finding |
-| Review CONCERNS/RETHINK | return to the artifact-producing skill with accepted concerns |
-
-## Question policy
-
-Follow `shared/question-policy.md`: investigate first, propose options, and ask only for decisions that genuinely belong to the user.
+사용자가 native goal을 명시적으로 요청했거나 기존 goal이 있을 때 해당 기능을 활용한다. goal은 지속 실행을, 설계 문서는 목적과 방법을, 기존 workflow 상태 관리자는 진행을 담당한다. 새 실행 루프·상태 파일을 중복으로 만들지 않는다. native goal 도구의 생성·완료·blocked 조건은 현재 도구 계약을 따른다.

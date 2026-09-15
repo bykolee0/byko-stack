@@ -1,152 +1,36 @@
 ---
 name: codex-spec-dev
-description: Codex에 최적화된 스펙/요구사항 기반 구현 스킬. spec.md, manifest.md, docs/specs 폴더, implementation-plan.md, "스펙 구현", "spec 기반 개발", "구현 시작", "이 기능 개발해줘" 요청에서 사용한다. 스펙이 있으면 AC 추적성을 유지하고, 스펙이 없으면 합의된 요구사항으로 경량 manifest/AC를 만든 뒤 구현, 테스트, 검증까지 진행한다. 긴 작업에서는 파일 기반 progress와 Codex plan/goal/subagent-aware 구현 루프를 사용한다.
+description: 설계 문서 또는 합의된 개발 목적을 실제 구현과 검증으로 완성한다. 스펙 기반 개발·구현 재개에 사용하며 설계 보완과 독립 리뷰를 자동으로 연결한다.
 ---
 
-# Codex Spec Dev
+# 스펙 기반 개발
 
-요구사항을 실제 코드와 검증 결과로 완결한다. 먼저 `../../shared/workflow.md`와 `../../shared/question-policy.md`를 읽고 따른다.
+[공통 원칙](../../shared/workflow.md)을 따른다. 요구사항을 포함한 목적을 실제 결과로 충족하고, 그 근거로 완료를 판단한다.
 
-## Purpose
+## 목적과 현재 상태
 
-- Do not stop at a plan when the user asked for implementation.
-- Preserve traceability from problem/spec to AC to code/tests.
-- Keep long-running state in files so a new Codex session can resume.
-- Use subagents only when current Codex policy permits it and write scopes are disjoint.
+설계와 현재 코드를 함께 읽고 이번 요청의 목적·방법·보존할 동작을 이해한다. 관련 컨벤션, 호출자와 downstream, 기존 변경과 검증 환경을 확인한다. 조사 범위는 실제 영향과 불확실성에 맞춘다.
 
-## Workflow
+[문서 관리](../../shared/artifacts.md)에 따라 기존 작업을 재개한다. 설계가 없거나 목적·방법이 충분히 정리되지 않았다면 [codex-spec-designer](../codex-spec-designer/SKILL.md)를 자동으로 수행하고 이어간다. 이미 충분한 설계는 새로 만들지 않는다.
 
-### 1. Resolve inputs
+## 구현과 설계의 일관성
 
-Use shared target resolution:
+코드베이스의 구조와 컨벤션에 맞춰 단순하고 유지보수 가능한 구현을 만든다. 목적 달성에 필요한 변경과 보존할 계약을 구분하고, 주변 호출자·공유 상태·실패 경로에 의도하지 않은 영향이 없는지 확인한다. 세부 작업 순서와 직접 구현·위임은 작업에 맞게 선택한다.
 
-1. explicit manifest/spec/plan/path from the user
-2. existing `docs/specs/*/manifest.md`
-3. conversation requirements
+문서와 구현이 모순되거나 방법의 전제가 맞지 않으면 디자이너로 관련 설계를 재정립한다. 문서 불일치를 남긴 채 후속 구현을 쌓거나 완료하지 않는다. 설계가 옳다면 코드를 고치고, 설계 변경이 필요하면 문서 검토를 거친 변경을 계획·코드·검증에 반영한다. 영향받는 작업은 정합성이 회복된 기준에서 이어간다.
 
-Read what exists:
+문서의 요구사항을 코드에 맞춰 낮추거나 테스트 기대값을 현재 구현에서 역으로 만들지 않는다. 제품 목적·계약에 실제로 다른 선택이 필요하면 사용자 결정을 구한다. 기존 승인 범위 안의 해결까지 재승인 절차로 바꾸지는 않는다.
 
-- `manifest.md`
-- `spec.md`
-- `ambiguity-ledger.md`
-- `analysis/`
-- `implementation-plan.md`
-- `traceability.md`
-- `progress.md`
+## 검증과 자동 리뷰
 
-If no spec exists but the conversation has enough agreed requirements, create a lightweight work directory with `manifest.md`, `implementation-plan.md`, `traceability.md`, and `progress.md`. Include at least one verifiable AC. If the problem, target area, or expected behavior is still unclear after investigation, ask concise option-based blocking questions.
+목적에서 기대 결과와 보존 조건을 도출해 구현을 검증한다. 필요한 테스트·정적 검사·실행 확인을 수행하고, 저장·전송·사용 흐름 등 결과가 실제로 드러나는 경계에서 확인한다. mock 내부 성공이나 테스트 개수만으로 목적 달성을 판정하지 않는다.
 
-### 2. Implementation readiness gate
+검증 가능한 구현을 준비하면 [codex-review](../codex-review/SKILL.md)의 구현 모드를 자동으로 수행한다. 발견된 코드 문제는 수정하고 영향받은 검증·리뷰를 다시 수행한다. 설계 문제는 디자이너로 돌아가 해결한다. 사용자에게 별도 리뷰 호출을 숙제로 남기지 않는다.
 
-Stop and bounce back when:
+새 변경·실패·미해결 위험이 있을 때 검증을 확장한다. 같은 광역 테스트를 반복하거나 정해진 라운드마다 무조건 다시 실행하지 않는다.
 
-- ledger has `blocking` items
-- an AC has no verification method
-- `[TBD]` affects implementation direction, public API, data model, security, migration, or AC meaning
-- spec/requirements conflict with current architecture in a way that needs a product or design decision
-- a required side effect is hard to reverse and not approved
+## 완료와 재개
 
-Non-directional TBDs, naming details, and log wording may be assumed. Record them in `progress.md` and manifest `Open Items`.
+진행 상태에는 목적에 대해 달성한 결과, 남은 일, 설계 변경의 영향, 검증과 독립 리뷰의 근거를 남긴다. 문서·코드·검증이 현재 설계에 일치하고 실제 결과가 목적을 충족하며 필요한 일이 남지 않았을 때 완료한다.
 
-### 3. Refresh codebase analysis
-
-Before editing, re-check the current code even if analysis docs exist:
-
-- target files and nearest local patterns
-- tests and commands
-- error handling, logging, auth, persistence, and migration conventions
-- caller/callee impact and shared state
-- user changes in the worktree
-
-Do not revert user changes. If user changes affect the task, adapt to them.
-
-### 4. Plan and traceability
-
-For small changes, an in-response checklist is enough. For multi-step work or 3+ ACs, update/create:
-
-```text
-docs/specs/<project>/
-├── implementation-plan.md
-├── traceability.md
-├── progress.md
-└── goal-loop-prompt.md   # only for long resumable work
-```
-
-Traceability must map every AC:
-
-| AC ID | AC | Implementation step | Files | Verification | Status |
-|-------|----|---------------------|-------|--------------|--------|
-
-If an AC cannot be mapped, improve the plan/spec before editing.
-
-### 5. Implement
-
-Choose the smallest strategy that finishes safely:
-
-- Small: edit directly, run focused tests.
-- Medium: maintain a plan/checklist and verify after each slice.
-- Large/resumable: use `references/goal-loop-template.md`, `progress.md`, and the active Codex plan/goal if present.
-
-Subagent implementation loop, when current policy permits:
-
-1. Split by AC or module with disjoint file ownership.
-2. Tell workers they are not alone in the codebase and must not revert others' edits.
-3. Provide manifest path, ACs, owned files/modules, verification command, and output expectations.
-4. Integrate only after reviewing diffs, tests, and AC evidence.
-5. Never accept a worker report without checking changed files.
-
-If subagents are unavailable or ownership overlaps, implement locally and keep state in `progress.md`.
-
-### 6. Verify
-
-Before completion, verify:
-
-- every AC status is pass or explicitly blocked
-- tests or manual/static verification cover each AC
-- relevant existing tests pass, or failures are explained with evidence
-- implementation does not add unrelated scope
-- code follows local conventions and handles failure paths
-
-Record verification in `progress.md` and update manifest stage status.
-
-### 7. Bounce back
-
-Return to spec design instead of coding around unclear requirements when:
-
-- ACs have competing interpretations
-- architecture/data/security decisions are missing
-- the requested behavior conflicts with established conventions
-- tests cannot be defined for the expected behavior
-
-Report:
-
-```markdown
-스펙 보완이 필요합니다.
-- 문제: ...
-- 근거: <file:line or spec text>
-- 돌아갈 단계: `$byko-stack-codex:codex-spec-designer <manifest-or-spec>`
-```
-
-### 8. Handoff
-
-On completion, report:
-
-```markdown
-구현을 완료했습니다.
-- manifest: docs/specs/<project>/manifest.md
-- 변경 파일: ...
-- AC 검증: AC-1 pass, AC-2 pass
-- 테스트: ...
-
-다음 단계:
-`$byko-stack-codex:codex-eval-gate implementation docs/specs/<project>/manifest.md`
-`$byko-stack-codex:codex-review implementation docs/specs/<project>/manifest.md`
-```
-
-If incomplete, say "미완료", list remaining ACs, blockers, current progress file, and exact resume command.
-
-## References
-
-- `../../shared/workflow.md`
-- `../../shared/question-policy.md`
-- `references/goal-loop-template.md`
+완료 보고는 실제 달성 결과와 이를 확인한 근거, 중요한 변경을 중심으로 한다. 실행 환경·사용자 결정이 없어 확인하지 못한 결과는 미검증 또는 미완료로 남기고 정확한 재개 지점을 제공한다. 배포 등 외부 작업이 목적에 포함되어도 권한 없이 실행하거나 수행했다고 간주하지 않는다.
