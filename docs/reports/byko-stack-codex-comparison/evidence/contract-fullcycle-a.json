@@ -1,0 +1,63 @@
+{
+  "workdir": "/private/tmp/byko-stack-comparison-uk9fn0gs/fullcycle-a",
+  "passed": 14,
+  "total": 14,
+  "results": [
+    {
+      "case": "first_insert_public_json_contract",
+      "status": "PASS"
+    },
+    {
+      "case": "new_label_preserves_rows_and_max_id",
+      "status": "PASS"
+    },
+    {
+      "case": "same_label_preserves_id_bytes_mtime",
+      "status": "PASS"
+    },
+    {
+      "case": "reopen_pretty_json_preserves_bytes_mtime",
+      "status": "PASS"
+    },
+    {
+      "case": "legacy_duplicates_first_id_zero_no_rewrite",
+      "status": "PASS"
+    },
+    {
+      "case": "case_sensitive_labels",
+      "status": "PASS"
+    },
+    {
+      "case": "whitespace_sensitive_labels",
+      "status": "PASS"
+    },
+    {
+      "case": "unicode_representation_sensitive_labels",
+      "status": "PASS"
+    },
+    {
+      "case": "empty_label_preserved",
+      "status": "PASS"
+    },
+    {
+      "case": "json_escape_decodes_to_same_label",
+      "status": "PASS"
+    },
+    {
+      "case": "control_characters_preserved",
+      "status": "PASS"
+    },
+    {
+      "case": "invalid_json_failure_preserves_file",
+      "status": "PASS"
+    },
+    {
+      "case": "retry_after_other_insert",
+      "status": "PASS"
+    },
+    {
+      "case": "existing_empty_array",
+      "status": "PASS"
+    }
+  ]
+}

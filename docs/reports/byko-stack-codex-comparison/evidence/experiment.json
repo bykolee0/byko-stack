@@ -1,0 +1,17 @@
+{
+  "root": "/private/tmp/byko-stack-comparison-uk9fn0gs",
+  "source_head": "769e206f0c4940e6dd33edf5568597eeb349c10e",
+  "created_unix": 1789458409.652729,
+  "variants": {
+    "a": {
+      "version": "0.2.0",
+      "plugin": "/private/tmp/byko-stack-comparison-uk9fn0gs/plugin-a/byko-stack-codex",
+      "tree_sha256": "87824e6d0da8f263d99c17e8072585b1bc019217622e6404d84422549f7069f6"
+    },
+    "b": {
+      "version": "0.3.0",
+      "plugin": "/private/tmp/byko-stack-comparison-uk9fn0gs/plugin-b/byko-stack-codex",
+      "tree_sha256": "d8572483acbc044e6a3c30c7b344ae49692b09ef0fec52e04c0ad7180a2db763"
+    }
+  }
+}

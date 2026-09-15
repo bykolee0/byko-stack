@@ -1,0 +1,17 @@
+{
+  "docs_count": 2,
+  "docs_lines": 29,
+  "docs_chars": 2513,
+  "docs": [
+    {
+      "path": "docs/specs/idempotent-add-task/progress.md",
+      "lines": 12,
+      "chars": 1251
+    },
+    {
+      "path": "docs/specs/idempotent-add-task/spec.md",
+      "lines": 17,
+      "chars": 1262
+    }
+  ]
+}

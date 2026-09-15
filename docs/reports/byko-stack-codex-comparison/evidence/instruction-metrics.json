@@ -1,0 +1,52 @@
+{
+  "a": {
+    "skill_count": 5,
+    "instruction_file_count": 16,
+    "instruction_lines": 1660,
+    "instruction_chars": 51470,
+    "descriptions_chars": 1651,
+    "skills": {
+      "codex-claude-eval": {
+        "lines": 84,
+        "description_chars": 353
+      },
+      "codex-spec-dev": {
+        "lines": 152,
+        "description_chars": 295
+      },
+      "codex-spec-designer": {
+        "lines": 138,
+        "description_chars": 241
+      },
+      "codex-eval-gate": {
+        "lines": 193,
+        "description_chars": 394
+      },
+      "codex-review": {
+        "lines": 153,
+        "description_chars": 368
+      }
+    }
+  },
+  "b": {
+    "skill_count": 3,
+    "instruction_file_count": 7,
+    "instruction_lines": 260,
+    "instruction_chars": 11966,
+    "descriptions_chars": 237,
+    "skills": {
+      "codex-spec-dev": {
+        "lines": 36,
+        "description_chars": 83
+      },
+      "codex-spec-designer": {
+        "lines": 32,
+        "description_chars": 78
+      },
+      "codex-review": {
+        "lines": 49,
+        "description_chars": 76
+      }
+    }
+  }
+}

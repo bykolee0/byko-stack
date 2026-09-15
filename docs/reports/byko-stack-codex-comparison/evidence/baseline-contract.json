@@ -1,0 +1,73 @@
+{
+  "workdir": "/private/tmp/byko-stack-comparison-uk9fn0gs/resume-a",
+  "passed": 4,
+  "total": 14,
+  "results": [
+    {
+      "case": "first_insert_public_json_contract",
+      "status": "PASS"
+    },
+    {
+      "case": "new_label_preserves_rows_and_max_id",
+      "status": "PASS"
+    },
+    {
+      "case": "same_label_preserves_id_bytes_mtime",
+      "status": "FAIL",
+      "error": "AssertionError: actual=2; expected=1"
+    },
+    {
+      "case": "reopen_pretty_json_preserves_bytes_mtime",
+      "status": "FAIL",
+      "error": "AssertionError: actual=43; expected=42"
+    },
+    {
+      "case": "legacy_duplicates_first_id_zero_no_rewrite",
+      "status": "FAIL",
+      "error": "AssertionError: actual=10; expected=0"
+    },
+    {
+      "case": "case_sensitive_labels",
+      "status": "FAIL",
+      "error": "AssertionError: actual=3; expected=1"
+    },
+    {
+      "case": "whitespace_sensitive_labels",
+      "status": "FAIL",
+      "error": "AssertionError: actual=4; expected=1"
+    },
+    {
+      "case": "unicode_representation_sensitive_labels",
+      "status": "FAIL",
+      "error": "AssertionError: actual=3; expected=1"
+    },
+    {
+      "case": "empty_label_preserved",
+      "status": "FAIL",
+      "error": "AssertionError: actual=3; expected=1"
+    },
+    {
+      "case": "json_escape_decodes_to_same_label",
+      "status": "FAIL",
+      "error": "AssertionError: actual=5; expected=4"
+    },
+    {
+      "case": "control_characters_preserved",
+      "status": "FAIL",
+      "error": "AssertionError: actual=3; expected=1"
+    },
+    {
+      "case": "invalid_json_failure_preserves_file",
+      "status": "PASS"
+    },
+    {
+      "case": "retry_after_other_insert",
+      "status": "FAIL",
+      "error": "AssertionError: actual=3; expected=1"
+    },
+    {
+      "case": "existing_empty_array",
+      "status": "PASS"
+    }
+  ]
+}

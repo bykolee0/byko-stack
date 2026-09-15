@@ -1,4 +1,4 @@
 interface:
-  display_name: "Codex Spec Dev"
-  short_description: "요구사항 기반 구현과 AC 검증."
-  default_prompt: "Use $codex-spec-dev to implement this manifest/spec through AC verification."
+  display_name: "스펙 기반 개발"
+  short_description: "목적에 맞춰 구현하고 설계 보완과 독립 리뷰까지 이어갑니다."
+  default_prompt: "$codex-spec-dev로 이 설계의 목적을 달성하도록 구현하고 검증·리뷰까지 진행해줘."

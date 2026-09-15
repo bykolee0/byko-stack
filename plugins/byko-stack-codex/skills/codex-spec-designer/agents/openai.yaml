@@ -1,4 +1,4 @@
 interface:
-  display_name: "Codex Spec Designer"
-  short_description: "manifest 중심 Codex 구현 스펙 작성."
-  default_prompt: "Use $codex-spec-designer to create a manifest-centered implementation spec with ledger and ACs."
+  display_name: "스펙 디자인"
+  short_description: "목적과 방법의 근거를 문서화하고 독립 검토까지 수행합니다."
+  default_prompt: "$codex-spec-designer로 개발 목적과 방법을 설계하고 문서 검토까지 진행해줘."

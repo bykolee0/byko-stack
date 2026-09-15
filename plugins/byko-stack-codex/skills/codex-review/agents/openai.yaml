@@ -1,4 +1,4 @@
 interface:
-  display_name: "Codex Review"
-  short_description: "문제 정의 기준 fresh-eyes 리뷰."
-  default_prompt: "Use $codex-review to review this artifact against the original problem definition."
+  display_name: "목적 기반 리뷰"
+  short_description: "목적에서 출발해 문서와 구현을 독립적으로 반증·검토합니다."
+  default_prompt: "$codex-review로 이 문서 또는 구현이 원래 목적을 충족하는지 독립 검토해줘."
