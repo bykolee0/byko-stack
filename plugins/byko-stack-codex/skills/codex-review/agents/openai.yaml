@@ -1,4 +1,4 @@
 interface:
   display_name: "목적 기반 리뷰"
-  short_description: "목적에서 출발해 문서와 구현을 독립적으로 반증·검토합니다."
-  default_prompt: "$codex-review로 이 문서 또는 구현이 원래 목적을 충족하는지 독립 검토해줘."
+  short_description: "목적에 맞는 독립 검토자를 구성하고 문서·구현·뷰어 검토를 종합합니다."
+  default_prompt: "$codex-review로 이 설계·구현·뷰어가 목적을 충족하는지 독립 검토해줘."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "문서 내용 검토"
+  short_description: "원래 목적과 근거를 대조해 설계·계획·분석의 타당성을 검토합니다."
+  default_prompt: "$byko-review-document로 이 문서의 목적과 근거를 검토해줘."

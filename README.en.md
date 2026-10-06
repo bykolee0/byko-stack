@@ -136,7 +136,7 @@ A Codex workflow that documents a **purpose, including its requirements**, and t
 | --- | --- |
 | `codex-spec-designer` | Designs the purpose and method, then automatically runs independent document review and resolves findings. |
 | `codex-spec-dev` | Implements the design and continues through outcome verification, independent review, and necessary fixes. |
-| `codex-review` | Reviews whether a design can achieve its purpose, or whether an implementation actually achieves it and integrates safely. |
+| `codex-review` | Starts independent reviewers and synthesizes design, implementation, and viewer findings against the purpose. |
 
 Design and development **invoke review automatically**. Users do not need to call another review command. When documents and code disagree, the designer reconciles the design and the caller updates affected documents, code, and verification before continuing. Reviewers return findings; the caller owns fixes and re-review. Design-only and review-only requests retain their original scope.
 
@@ -144,7 +144,20 @@ New work defaults to `docs/specs/<work>/spec.md` and `progress.md`: the former h
 
 In 0.3, `codex-eval-gate` is consolidated into the document and implementation modes of `codex-review`, and `codex-claude-eval` is removed. Pass an old eval target to `codex-review` instead. Existing work artifacts remain readable and are not automatically migrated or deleted. Automatic skill selection retains its default policy.
 
-See [workflow.md](plugins/byko-stack-codex/shared/workflow.md) for shared principles and [artifacts.md](plugins/byko-stack-codex/shared/artifacts.md) for document management.
+Version 0.4 bundles analyst, implementer, reviewer, and viewer TOMLs in `agents/`, all defaulting to `gpt-6.1-sol` with `high` reasoning. Stack reads the installed files and passes their instructions and settings to the available spawning tool. A Git checkout or native agent registration is not required; bundling TOMLs does not automatically register native agents.
+
+| Standalone specialist skill | Purpose |
+|---|---|
+| `byko-analyze` | Scoped code, document, or data investigation with evidence |
+| `byko-implement` | Bounded implementation, preserved contracts, and verification |
+| `byko-review-code` | Behavior, contracts, regressions, and downstream effects |
+| `byko-review-document` | Purpose, design, claims, and supporting evidence |
+| `byko-build-viewer` | Visual explanations for readers without prior context; HTML by default |
+| `byko-review-viewer` | Reader comprehension, visual communication, and navigation |
+
+Stack delegates work that benefits from a separate context and can apply the same skills directly for small tasks. Specialist skills do not require a fixed calling sequence, prior documents, or a particular agent. If spawning is unavailable, feasible work continues directly and missing independent review is disclosed. Viewers are created when useful; existing documents are not migrated automatically.
+
+See the [role guide](plugins/byko-stack-codex/agents/README.md), [delegation guide](plugins/byko-stack-codex/shared/delegation.md), [shared principles](plugins/byko-stack-codex/shared/workflow.md), and [document management](plugins/byko-stack-codex/shared/artifacts.md). Run helper checks with `python3 -m unittest discover -s plugins/byko-stack-codex/tests -v`.
 
 ### byko-goal
 

@@ -1,0 +1,4 @@
+interface:
+  display_name: "코드 검토"
+  short_description: "목적과 보존 계약에서 출발해 실제 동작과 주변 영향을 검토합니다."
+  default_prompt: "$byko-review-code로 이 변경의 동작과 회귀 위험을 검토해줘."

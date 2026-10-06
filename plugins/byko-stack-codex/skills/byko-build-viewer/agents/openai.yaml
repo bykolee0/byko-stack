@@ -1,0 +1,4 @@
+interface:
+  display_name: "사람용 뷰어 제작"
+  short_description: "처음 보는 독자가 이해하고 탐색할 수 있는 시각적 자료를 만듭니다."
+  default_prompt: "$byko-build-viewer로 이 내용을 처음 보는 사람을 위한 뷰어로 만들어줘."

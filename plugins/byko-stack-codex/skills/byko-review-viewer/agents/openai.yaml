@@ -1,0 +1,4 @@
+interface:
+  display_name: "뷰어 이해·사용성 검토"
+  short_description: "사람용 자료의 맥락·시각화·탐색을 실제 독자 행동으로 검토합니다."
+  default_prompt: "$byko-review-viewer로 이 자료의 이해도와 탐색 UX를 검토해줘."
