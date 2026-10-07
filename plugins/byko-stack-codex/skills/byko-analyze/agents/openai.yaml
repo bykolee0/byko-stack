@@ -1,0 +1,4 @@
+interface:
+  display_name: "근거 분석"
+  short_description: "필요한 범위의 코드·문서·데이터를 조사하고 근거와 함께 전달합니다."
+  default_prompt: "$byko-analyze로 이 질문에 필요한 근거를 조사해줘."

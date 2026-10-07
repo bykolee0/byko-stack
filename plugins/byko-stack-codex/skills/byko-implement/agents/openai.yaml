@@ -1,0 +1,4 @@
+interface:
+  display_name: "범위 기반 구현"
+  short_description: "맡은 동작을 기존 구조와 계약에 맞춰 구현하고 결과를 검증합니다."
+  default_prompt: "$byko-implement로 요청한 동작을 구현하고 검증해줘."

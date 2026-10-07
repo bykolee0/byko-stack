@@ -147,7 +147,7 @@ Claude Code 세션에서 아래 커맨드로 이 저장소를 마켓플레이스
 | --- | --- |
 | `codex-spec-designer` | 목적과 방법을 설계하고 독립 문서 검토·필요한 보완까지 수행한다. |
 | `codex-spec-dev` | 설계를 구현하고 목적에 대한 검증·독립 리뷰·수정까지 이어간다. |
-| `codex-review` | 문서 모드에서는 설계가 목적을 달성할 수 있는지, 구현 모드에서는 실제 결과와 주변 영향까지 독립 검토한다. |
+| `codex-review` | 목적에 맞는 독립 검토자를 구성하고 설계·구현·뷰어 검토 결과를 종합한다. |
 
 디자인과 개발이 리뷰를 **자동으로 호출**한다. 사용자가 검토 명령을 따로 기억할 필요가 없다. 설계와 구현이 어긋나면 디자이너가 설계를 재정립하고, 영향받은 문서·코드·검증을 맞춘 뒤 이어간다. 리뷰는 발견 사항을 반환하고 호출자가 수정·재검토를 소유한다. 설계만 또는 리뷰만 요청한 경우에는 그 범위를 지킨다.
 
@@ -155,7 +155,20 @@ Claude Code 세션에서 아래 커맨드로 이 저장소를 마켓플레이스
 
 0.3에서는 `codex-eval-gate`를 `codex-review`의 문서·구현 모드로 통합하고 `codex-claude-eval`을 제거했다. 이전 eval 호출은 같은 대상을 `codex-review`에 전달하면 된다. 기존 작업 산출물은 계속 참조하며 자동 이관·삭제하지 않는다. 자동 스킬 선택은 기본 설정을 유지한다.
 
-공유 원칙은 [workflow.md](plugins/byko-stack-codex/shared/workflow.md), 문서 관리는 [artifacts.md](plugins/byko-stack-codex/shared/artifacts.md)를 참고한다.
+0.4에서는 플러그인 내부 `agents/`에 분석가·구현자·검토자·뷰어 생성자 TOML을 제공한다. 기본 모델은 모두 `gpt-6.1-sol`, 노력 수준은 `high`다. 설치된 파일을 읽어 현재 생성 도구에 역할·설정을 전달하므로 Git checkout이나 사용자 native agent 등록은 필수가 아니다. TOML 파일 동봉이 native 자동 등록을 의미하지는 않는다.
+
+| 독립 전문 스킬 | 용도 |
+|---|---|
+| `byko-analyze` | 필요한 범위의 코드·문서·데이터 조사와 근거 전달 |
+| `byko-implement` | 맡은 동작의 구현·보존 계약 확인·자체 검증 |
+| `byko-review-code` | 실제 동작·계약·회귀·주변 영향 검토 |
+| `byko-review-document` | 목적·설계·주장·근거의 타당성 검토 |
+| `byko-build-viewer` | 배경 없는 독자를 위한 시각적 설명 자료 제작, 기본 HTML |
+| `byko-review-viewer` | 사람의 이해·시각화·탐색 UX 검토 |
+
+Stack은 분리할 가치가 있는 작업을 위임하고 작은 일은 같은 스킬로 직접 수행한다. 전문 스킬은 정해진 호출 순서·사전 문서·특정 에이전트를 요구하지 않는다. 생성 기능이 없으면 가능한 작업을 직접 수행하되 독립 리뷰 미실시를 숨기지 않는다. 사람용 뷰어는 필요할 때 만들며 기존 문서를 일괄 이관하지 않는다.
+
+[역할 사용 안내](plugins/byko-stack-codex/agents/README.md), [위임 방법](plugins/byko-stack-codex/shared/delegation.md), [공유 원칙](plugins/byko-stack-codex/shared/workflow.md), [문서 관리](plugins/byko-stack-codex/shared/artifacts.md)를 참고한다. 로컬 helper 검사는 `python3 -m unittest discover -s plugins/byko-stack-codex/tests -v`로 실행한다.
 
 ### byko-goal
 
