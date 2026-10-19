@@ -1,0 +1,23 @@
+[
+  {
+    "agent": "/root/baseline_code",
+    "timestamp": "2026-10-19T07:02:43.127Z",
+    "type": "custom_tool_call",
+    "name": "exec",
+    "arguments": "text(await tools.exec_command({cmd:\"pwd && cat /private/tmp/byko-purpose-review-20261019.kuA3QA/baseline/agents/byko-reviewer.toml && cat /private/tmp/byko-purpose-review-20261019.kuA3QA/baseline/skills/byko-review-code/SKILL.md\",\"max_output_tokens\":14000}));\n"
+  },
+  {
+    "agent": "/root/baseline_code",
+    "timestamp": "2026-10-19T07:02:47.498Z",
+    "type": "custom_tool_call",
+    "name": "exec",
+    "arguments": "text(await tools.exec_command({cmd:\"cat /private/tmp/byko-purpose-review-20261019.kuA3QA/baseline/shared/review-principles.md && cat /private/tmp/byko-purpose-review-20261019.kuA3QA/fixtures/code/REQUEST.md && cat /private/tmp/byko-purpose-review-20261019.kuA3QA/fixtures/code/CONTRACT.md && nl -ba /private/tmp/byko-purpose-review-20261019.kuA3QA/fixtures/code/candidate_a.py && nl -ba /private/tmp/byko-purpose-review-20261019.kuA3QA/fixtures/code/candidate_b.py\",\"max_output_tokens\":18000}));\n"
+  },
+  {
+    "agent": "/root/baseline_code",
+    "timestamp": "2026-10-19T07:03:00.930Z",
+    "type": "custom_tool_call",
+    "name": "exec",
+    "arguments": "text(await tools.exec_command({cmd:\"cat /private/tmp/byko-purpose-review-20261019.kuA3QA/baseline/shared/task-contract.md && nl -ba /private/tmp/byko-purpose-review-20261019.kuA3QA/fixtures/code/review-baseline.md && python3 -B - <<'PY'\\nfrom pathlib import Path\\nimport hashlib\\nbase = Path('/private/tmp/byko-purpose-review-20261019.kuA3QA/fixtures/code')\\ncases = [\\n    ('ordinary', 'a', 3, 7),\\n    ('exact', 'a', 10, 0),\\n    ('insufficient', 'a', 11, ValueError),\\n    ('zero', 'a', 0, ValueError),\\n    ('negative', 'a', -1, ValueError),\\n    ('bool_true', 'a', True, ValueError),\\n    ('bool_false', 'a', False, ValueError),\\n    ('float', 'a', 1.0, ValueError),\\n    ('str', 'a', '1', ValueError),\\n    ('none', 'a', None, ValueError),\\n    ('missing', 'missing', 1, KeyError),\\n    ('empty_sku', 'empty', 1, ValueError),\\n]\\nfor name in ('candidate_a.py', 'candidate_b.py'):\\n    p = base / name\\n    source = p.read_bytes()\\n    namespace = {}\\n    exec(compile(source, str(p), 'exec'), namespace)\\n    fn = namespace['deduct']\\n    print(name, 'sha256', hashlib.sha256(source).hexdigest())\\n    failures = 0\\n    for title, sku, quantity, expected in cases:\\n        stock = {'a': 10, 'b': 20, 'empty': 0}\\n        before = stock.copy()\\n        try:\\n            actual = fn(stock, sku, quantity)\\n        except Exception as exc:\\n            actual = type(exc)\\n        expected_state = before.copy()\\n        if not isinstance(expected, type):\\n            expected_state[sku] = expected\\n        ok = actual == expected and stock == expected_state\\n        failures += not ok\\n        print(title, 'PASS' if ok else 'FAIL', 'actual=', getattr(actual, '__name__', actual), 'stock=', stock)\\n    stock = {'a': 10, 'b': 20}\\n    results = [fn(stock, 'a', 3), fn(stock, 'b', 4), fn(stock, 'a', 7)]\\n    ok = results == [7, 16, 0] and stock == {'a': 0, 'b': 16}\\n    failures += not ok\\n    print('multi_sku_sequence', 'PASS' if ok else 'FAIL', results, stock)\\n    print('total', len(cases) + 1, 'failures', failures)\\nPY\",\"max_output_tokens\":9000}));\n"
+  }
+]

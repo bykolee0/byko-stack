@@ -1,0 +1,245 @@
+[
+  {
+    "agent": "purpose_design_review",
+    "session_id": "01a152f6-3e75-70b1-8a6f-de42b5d0c278",
+    "config_records": [
+      {
+        "model": "gpt-6.1-sol",
+        "effort": "high"
+      }
+    ],
+    "tool_calls": 4,
+    "response": "responses/purpose_design_review.md",
+    "source_session": "rollout-2026-10-19T16-00-32-01a152f6-3e75-70b1-8a6f-de42b5d0c278.jsonl",
+    "completed_at": [
+      "2026-10-19T07:01:16.086Z"
+    ]
+  },
+  {
+    "agent": "baseline_goal",
+    "session_id": "01a152f7-e805-75a1-a1d9-af599489704a",
+    "config_records": [
+      {
+        "model": "gpt-6.1-sol",
+        "effort": "high"
+      }
+    ],
+    "tool_calls": 4,
+    "response": "responses/baseline_goal.md",
+    "source_session": "rollout-2026-10-19T16-02-20-01a152f7-e805-75a1-a1d9-af599489704a.jsonl",
+    "completed_at": [
+      "2026-10-19T07:03:13.207Z"
+    ]
+  },
+  {
+    "agent": "baseline_plan",
+    "session_id": "01a152f8-11af-73f1-94fc-f9be3c1cc2e5",
+    "config_records": [
+      {
+        "model": "gpt-6.1-sol",
+        "effort": "high"
+      }
+    ],
+    "tool_calls": 3,
+    "response": "responses/baseline_plan.md",
+    "source_session": "rollout-2026-10-19T16-02-31-01a152f8-11af-73f1-94fc-f9be3c1cc2e5.jsonl",
+    "completed_at": [
+      "2026-10-19T07:03:05.064Z"
+    ]
+  },
+  {
+    "agent": "baseline_code",
+    "session_id": "01a152f8-2e88-7110-b011-07f7f3c70915",
+    "config_records": [
+      {
+        "model": "gpt-6.1-sol",
+        "effort": "high"
+      }
+    ],
+    "tool_calls": 3,
+    "response": "responses/baseline_code.md",
+    "source_session": "rollout-2026-10-19T16-02-39-01a152f8-2e88-7110-b011-07f7f3c70915.jsonl",
+    "completed_at": [
+      "2026-10-19T07:03:17.900Z"
+    ]
+  },
+  {
+    "agent": "candidate_goal",
+    "session_id": "01a152fd-3d86-7c33-870e-c674db9e2925",
+    "config_records": [
+      {
+        "model": "gpt-6.1-sol",
+        "effort": "high"
+      }
+    ],
+    "tool_calls": 4,
+    "response": "responses/candidate_goal.md",
+    "source_session": "rollout-2026-10-19T16-08-10-01a152fd-3d86-7c33-870e-c674db9e2925.jsonl",
+    "completed_at": [
+      "2026-10-19T07:08:56.171Z"
+    ]
+  },
+  {
+    "agent": "candidate_plan",
+    "session_id": "01a152fd-598e-7d80-9678-e0970793bd42",
+    "config_records": [
+      {
+        "model": "gpt-6.1-sol",
+        "effort": "high"
+      }
+    ],
+    "tool_calls": 4,
+    "response": "responses/candidate_plan.md",
+    "source_session": "rollout-2026-10-19T16-08-17-01a152fd-598e-7d80-9678-e0970793bd42.jsonl",
+    "completed_at": [
+      "2026-10-19T07:08:58.702Z"
+    ]
+  },
+  {
+    "agent": "candidate_code",
+    "session_id": "01a152fd-7557-7c61-9745-09eb5e3a3001",
+    "config_records": [
+      {
+        "model": "gpt-6.1-sol",
+        "effort": "high"
+      }
+    ],
+    "tool_calls": 3,
+    "response": "responses/candidate_code.md",
+    "source_session": "rollout-2026-10-19T16-08-24-01a152fd-7557-7c61-9745-09eb5e3a3001.jsonl",
+    "completed_at": [
+      "2026-10-19T07:09:11.420Z"
+    ]
+  },
+  {
+    "agent": "candidate_lifecycle",
+    "session_id": "01a152fe-bed2-73e3-ad30-9213d035a39c",
+    "config_records": [
+      {
+        "model": "gpt-6.1-sol",
+        "effort": "high"
+      }
+    ],
+    "tool_calls": 24,
+    "response": "responses/candidate_lifecycle.md",
+    "source_session": "rollout-2026-10-19T16-09-49-01a152fe-bed2-73e3-ad30-9213d035a39c.jsonl",
+    "completed_at": [
+      "2026-10-19T07:14:31.801Z"
+    ]
+  },
+  {
+    "agent": "purpose_implementation_review",
+    "session_id": "01a152ff-847a-79e1-a2dc-697c7ab4175f",
+    "config_records": [
+      {
+        "model": "gpt-6.1-sol",
+        "effort": "high"
+      }
+    ],
+    "tool_calls": 8,
+    "response": "responses/purpose_implementation_review.md",
+    "source_session": "rollout-2026-10-19T16-10-39-01a152ff-847a-79e1-a2dc-697c7ab4175f.jsonl",
+    "completed_at": [
+      "2026-10-19T07:11:40.931Z",
+      "2026-10-19T07:12:30.001Z"
+    ]
+  },
+  {
+    "agent": "candidate_lifecycle/upload_reviewer",
+    "session_id": "01a152ff-a0ab-78c0-9e01-f4e6730555e6",
+    "config_records": [
+      {
+        "model": "gpt-6.1-sol",
+        "effort": "high"
+      }
+    ],
+    "tool_calls": 7,
+    "response": "responses/candidate_lifecycle--upload_reviewer.md",
+    "source_session": "rollout-2026-10-19T16-10-46-01a152ff-a0ab-78c0-9e01-f4e6730555e6.jsonl",
+    "completed_at": [
+      "2026-10-19T07:11:18.413Z",
+      "2026-10-19T07:12:06.804Z",
+      "2026-10-19T07:14:03.383Z"
+    ]
+  },
+  {
+    "agent": "candidate_resume",
+    "session_id": "01a15303-5ea1-7ac2-9f7a-634d76e6030d",
+    "config_records": [
+      {
+        "model": "gpt-6.1-sol",
+        "effort": "high"
+      }
+    ],
+    "tool_calls": 17,
+    "response": "responses/candidate_resume.md",
+    "source_session": "rollout-2026-10-19T16-14-52-01a15303-5ea1-7ac2-9f7a-634d76e6030d.jsonl",
+    "completed_at": [
+      "2026-10-19T07:18:07.029Z"
+    ]
+  },
+  {
+    "agent": "candidate_resume/review_resume_plan",
+    "session_id": "01a15303-c114-7652-b8c5-4f5d6444f3b9",
+    "config_records": [
+      {
+        "model": "gpt-6.1-sol",
+        "effort": "high"
+      }
+    ],
+    "tool_calls": 4,
+    "response": "responses/candidate_resume--review_resume_plan.md",
+    "source_session": "rollout-2026-10-19T16-15-17-01a15303-c114-7652-b8c5-4f5d6444f3b9.jsonl",
+    "completed_at": [
+      "2026-10-19T07:15:58.725Z"
+    ]
+  },
+  {
+    "agent": "candidate_resume/review_resume_code",
+    "session_id": "01a15305-4ab7-7272-b835-5745719b82d5",
+    "config_records": [
+      {
+        "model": "gpt-6.1-sol",
+        "effort": "high"
+      }
+    ],
+    "tool_calls": 5,
+    "response": "responses/candidate_resume--review_resume_code.md",
+    "source_session": "rollout-2026-10-19T16-16-58-01a15305-4ab7-7272-b835-5745719b82d5.jsonl",
+    "completed_at": [
+      "2026-10-19T07:17:46.537Z"
+    ]
+  },
+  {
+    "agent": "candidate_resume_complete",
+    "session_id": "01a15306-e020-73c1-9bd9-438b57174e18",
+    "config_records": [
+      {
+        "model": "gpt-6.1-sol",
+        "effort": "high"
+      }
+    ],
+    "tool_calls": 9,
+    "response": "responses/candidate_resume_complete.md",
+    "source_session": "rollout-2026-10-19T16-18-41-01a15306-e020-73c1-9bd9-438b57174e18.jsonl",
+    "completed_at": [
+      "2026-10-19T07:20:24.219Z"
+    ]
+  },
+  {
+    "agent": "candidate_resume_complete/review_resume_doc_refresh",
+    "session_id": "01a15307-79ab-7ec3-8ef5-d392427c4d22",
+    "config_records": [
+      {
+        "model": "gpt-6.1-sol",
+        "effort": "high"
+      }
+    ],
+    "tool_calls": 3,
+    "response": "responses/candidate_resume_complete--review_resume_doc_refresh.md",
+    "source_session": "rollout-2026-10-19T16-19-21-01a15307-79ab-7ec3-8ef5-d392427c4d22.jsonl",
+    "completed_at": [
+      "2026-10-19T07:19:57.171Z"
+    ]
+  }
+]

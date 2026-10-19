@@ -1,0 +1,15 @@
+{
+  "before": {
+    "CONTRACT.md": "872e12bf31c394d7131318bfe093e5b2aa4c23110b9cd073d554ff58e6136e56",
+    "README.md": "204af9d479933a5f129365fad188c7f55d92ed985c00c84da0a57ff233776281",
+    "uploads.py": "2d6a59a399eaf9453b5c0bf75ad7132e70393f3057277451b12a1a43a7685977",
+    "REQUEST.md": "348e08accda9dfc8d7baa97935ad13aace2eb4fdc8411d1b53c32af3622101e8",
+    "test_uploads.py": "58943b09bcab7c994b68e540f1a50cf51bba394d1954715a08eb931cbae94b84",
+    "docs/progress.md": "b70cbbf57855a128546c1c67b8c3785e0cdb75ceaa0f2ef58a9a13478ec8218d",
+    "docs/spec.md": "9fb9a4b884ec568c53e97546c6a72eeb71eb4bcb8a795fe28de72a5ff70235fe"
+  },
+  "changed_after": {
+    "docs/progress.md": "d1a1f1281cb3040e637665e709aea73410774a5b0d5ebcab3b34901f420096c7",
+    "docs/spec.md": "0ad7a73d9e0e3d939e75186d9bb9f32ac48d3b7d6708f5a04faf6da0dcf33dfd"
+  }
+}

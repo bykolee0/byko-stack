@@ -1,0 +1,14 @@
+{
+  "uploads.py": {
+    "sha256": "2d6a59a399eaf9453b5c0bf75ad7132e70393f3057277451b12a1a43a7685977",
+    "content": "def accept(records, customer_id, request_id, filename, content):\n    for record in records:\n        if (record[\"customer_id\"] == customer_id\n                and record[\"request_id\"] == request_id):\n            if record[\"content\"] != content:\n                raise ValueError(\"request_id already accepted with different content\")\n            return record[\"id\"]\n\n    record = {\"id\": len(records) + 1, \"customer_id\": customer_id,\n              \"request_id\": request_id, \"filename\": filename, \"content\": content}\n    records.append(record)\n    return record[\"id\"]\n\n"
+  },
+  "docs/progress.md": {
+    "sha256": "8a53b2fada82b80e990f2fc71e7fbe6fc7248fcae8ceaa9332cf5dbf9b8b6c79",
+    "content": "# 작업 상태\n설계 본문: spec.md\n현재 상태: 설계 초안과 사전 검증 가안 작성. 검토는 아직 수행하지 않았다. 제품 코드 변경 전.\n\n## 재개 기록\n\n현재 요청은 REQUEST.md에 따라 기존 spec.md의 CONTRACT.md 재전송 계약을\n구현하고 검증하는 것이다. 기존 문서 경로를 유지하며 이 파일이 진행 상태의 정본이다.\n\n작업 위치는 resume 디렉터리이며 Git 저장소가 아니다. 적용된 Git 작성자 설정은\nbykolee0 / bykolee1@gmail.com(사용자 전역 설정)이다. 원격 인증을 사용하는 작업은 없다.\n\n구현 전 자료 버전(SHA-256): spec.md는\n`9fb9a4b884ec568c53e97546c6a72eeb71eb4bcb8a795fe28de72a5ff70235fe`,\nuploads.py는 `c2b1a2ccb70b5f2def93ed88e92eaeab7ded78cd3dd201718d8248fe1f1b7ff7`.\n사전 기준은 기존 spec.md:3을 이어받았다. 변경 전 실제 호출에서 동일 요청의\n두 번째 ID가 2, 저장 건수가 2가 되어 계약 위반을 재현했다.\n\n독립 byko-reviewer가 위 버전의 목표 채택과 계획 구현 준비를 각각 통과로 판단했다.\n필수 수정은 없었고, 파일명만 바꾼 재전송도 전체 상태를 보존하는 구체 사례를\n구현 검증에 포함하도록 제안했다. 이 문서 검토는 구현 완료 판정이 아니다.\n번들 prepare_agent.py에서 읽은 gpt-6.1-sol/high를 독립 컨텍스트 생성 인자로\n요청했다. 도구는 실제 모델 적용값을 별도로 노출하지 않았다.\n\n구현은 고객·request_id 조회와 bytes 비교를 append 전에 수행한다. 충돌 오류는\n표준 ValueError를 선택했다(기존 오류 컨벤션 없음). 최초 저장 필드와 ID 계산은\n보존하고 외부 처리·UI·다중프로세스 기능은 추가하지 않았다. 설계 목적과 방법은\n변경하지 않았다. 구현 검증 및 독립 구현 리뷰를 이어서 수행한다.\n"
+  },
+  "docs/spec.md": {
+    "sha256": "9fb9a4b884ec568c53e97546c6a72eeb71eb4bcb8a795fe28de72a5ff70235fe",
+    "content": "# 개선 계획\n목적은 CONTRACT.md의 재전송 계약 충족이다. 현재 accept는 매 호출 새 record를 append하므로 동일 요청도 다시 등록된다. 이 함수의 고객/request_id 조합으로 기존 접수를 판별하고, 기존 bytes와 요청 bytes를 비교해 동일하면 기존 ID 반환, 다르면 기존 레코드를 바꾸지 않고 충돌 오류로 처리한다. 서로 다른 고객 또는 request_id는 독립적인 신규 접수로 유지한다. 파일명은 식별자로 사용하지 않는다. 오류 메시지와 탐색 방식 등 내부 선택은 기존 컨벤션과 입력 규모에 맞춰 구현자가 정한다.\n구현 전 검토 가안: 동일 고객/ID/내용 재시도 시 반환 ID와 전체 records가 동일; 동일 고객/ID/다른내용은 오류와 records 보존; 같은 파일명/다른 ID는 별도 접수; 다른고객/같은 ID도 별도 접수; 최초접수의 기존 반환과 저장 필드 보존. 실제 records와 반환/오류를 함께 관찰한다. 단일 프로세스 순차 호출 계약이므로 분산 락 도입은 필요하지 않다. 구현 후 이 기준을 확인하고 새로 드러난 위험이 있으면 추가한다.\n"
+  }
+}
