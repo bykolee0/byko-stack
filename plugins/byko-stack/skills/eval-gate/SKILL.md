@@ -53,7 +53,7 @@ python3 "${CLAUDE_PLUGIN_ROOT}/scripts/byko-doc.py" check <작업 디렉토리>
 `byko-stack:evaluator` 서브에이전트를 호출한다. 전달할 것:
 
 - 평가 모드와 대상 파일 경로
-- 맥락: 매니페스트의 **문제 정의**와 **핵심 결정** 발췌 — 이것만. **현재 세션의 결론·기대·"아마 통과할 것" 같은 뉘앙스를 절대 누설하지 않는다**
+- 맥락: 매니페스트의 **문제 정의**와 **핵심 결정** 발췌 — 이것만. 현재 세션의 결론·기대·"아마 통과할 것" 같은 뉘앙스는 넘기지 않는다 — 넘기는 순간 독립 평가의 가치가 사라진다
 - 결과 저장 경로: `<작업 디렉토리>/eval-results/<mode>-claude-<timestamp>.md` (매니페스트가 없으면 대상 옆에 `eval-results/`)
 - custom 모드면 합의한 평가 기준
 
@@ -61,7 +61,7 @@ python3 "${CLAUDE_PLUGIN_ROOT}/scripts/byko-doc.py" check <작업 디렉토리>
 
 ### Step 3: 결과 검증
 
-evaluator의 판정을 그대로 신뢰하지 않는다. FAIL 항목의 근거를 직접 확인하여 분류한다:
+evaluator는 발견을 거르지 않고 경미한 것까지 보고한다. 거르는 것이 이 단계의 일이다 — FAIL 항목의 근거를 직접 확인하여 분류한다:
 
 - `accepted` — 근거가 타당한 지적
 - `rejected` — 오탐 (근거 파일을 직접 확인하여 반박 가능)

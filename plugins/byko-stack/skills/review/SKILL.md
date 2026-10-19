@@ -49,7 +49,7 @@ allowed-tools: Read, Write, Edit, Glob, Grep, Bash, Agent, Skill
 
 ### Step 3: 결과 검증 + 보고
 
-reviewer의 지적을 그대로 믿지 않는다. 각 지적의 근거(파일:라인, 인용)를 직접 확인하여 accepted / rejected / needs_followup으로 분류한다.
+reviewer는 발견을 거르지 않고 경미한 것까지 보고한다. 거르는 것이 이 단계의 일이다 — 각 지적의 근거(파일:라인, 인용)를 직접 확인하여 accepted / rejected / needs_followup으로 분류한다.
 
 **판정 처리:**
 
