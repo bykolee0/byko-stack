@@ -1,7 +1,7 @@
 {
   "name": "byko-stack-codex",
-  "version": "0.4.0",
-  "description": "목적 기반 설계·개발·독립 검토를 재사용 가능한 역할과 전문 스킬로 연결하는 Codex 플러그인.",
+  "version": "0.5.0",
+  "description": "문제에 맞춘 조사·위임, 목표·계획 검토와 구현 전 검증 기준을 개발까지 연결하는 Codex 플러그인.",
   "author": {
     "name": "bykolee",
     "url": "https://github.com/bykolee0"
@@ -19,7 +19,7 @@
   "interface": {
     "displayName": "Byko Stack Codex",
     "shortDescription": "재사용 에이전트로 설계·개발·검토·HTML 설명",
-    "longDescription": "번들 TOML의 분석가·구현자·검토자·뷰어 생성자를 작업 범위에 맞춰 사용합니다. 전문 스킬은 단독으로도 쓸 수 있으며, Stack은 목적·설계·구현의 일관성과 자동 독립 리뷰·중단 및 재개를 연결합니다. 역할 기본값은 GPT-6.1 Sol high입니다.",
+    "longDescription": "요청에서 조사 질문과 필요한 관점을 도출하고, 육하원칙 목표·계획·실제 결과를 단계에 맞게 검토합니다. 구현 전 검토 기준을 후속 리뷰에 연결하며, 발견 사항은 원인이 있는 단계로 반환합니다. 역할 수는 작업에 맞춰 정하고 전문 스킬은 단독으로도 사용할 수 있습니다. 역할 기본값은 GPT-6.1 Sol high입니다.",
     "developerName": "bykolee",
     "category": "Productivity",
     "capabilities": [

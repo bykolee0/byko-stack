@@ -134,7 +134,7 @@ A Codex workflow that documents a **purpose, including its requirements**, and t
 
 | Skill | Responsibility |
 | --- | --- |
-| `codex-spec-designer` | Designs the purpose and method, then automatically runs independent document review and resolves findings. |
+| `codex-spec-designer` | Clarifies the goal and initial verification criteria, then independently reviews the goal and implementation plan. |
 | `codex-spec-dev` | Implements the design and continues through outcome verification, independent review, and necessary fixes. |
 | `codex-review` | Starts independent reviewers and synthesizes design, implementation, and viewer findings against the purpose. |
 
@@ -145,6 +145,8 @@ New work defaults to `docs/specs/<work>/spec.md` and `progress.md`: the former h
 In 0.3, `codex-eval-gate` is consolidated into the document and implementation modes of `codex-review`, and `codex-claude-eval` is removed. Pass an old eval target to `codex-review` instead. Existing work artifacts remain readable and are not automatically migrated or deleted. Automatic skill selection retains its default policy.
 
 Version 0.4 bundles analyst, implementer, reviewer, and viewer TOMLs in `agents/`, all defaulting to `gpt-6.1-sol` with `high` reasoning. Stack reads the installed files and passes their instructions and settings to the available spawning tool. A Git checkout or native agent registration is not required; bundling TOMLs does not automatically register native agents.
+
+Version 0.5 derives investigation questions before choosing perspectives, personas, and delegation boundaries; it does not require a fixed team or minimum headcount. Goals identify who, when, where, what, how, and why at the outcome level. Reviews assess the goal before adoption, the plan before implementation, and actual results before completion. Goal-only requests stop at that scope. [Verification criteria](plugins/byko-stack-codex/shared/verification.md) prepared before implementation remain required inputs to later review, with new risks added as they emerge. Rework requests identify the discrepancy, evidence, and scope to revisit. These are instruction contracts; their decision quality still requires behavioral validation.
 
 | Standalone specialist skill | Purpose |
 |---|---|

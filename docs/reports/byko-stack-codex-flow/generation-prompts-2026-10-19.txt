@@ -1,0 +1,106 @@
+byko-stack-codex AS-IS flow · 2026-10-19
+Generation mode: built-in image_gen
+Source baseline: main a643b7cd322f0e1e6efe97711aaf92ce0db8b076, plugin 0.4.0
+Read source: plugins/byko-stack-codex/shared/{workflow,delegation,artifacts,task-contract}.md and skills/*/SKILL.md.
+Selected image: as-is-2026-10-19.png
+Scope: current source-defined flow, not guaranteed runtime behavior or an improvement proposal.
+
+INITIAL PROMPT
+Use case: infographic-diagram.
+Create ONE high-resolution PNG diagram, landscape 3840 x 2160 if possible, white/light warm background, crisp Korean sans-serif typography, very legible exact Korean and English identifiers. This is an engineering workflow map, not a decorative infographic. It will be zoomed to inspect individual labels. Organized horizontal swimlanes, carefully routed directional arrows, ample whitespace, no overlapping lines/text, no photographs or mascots. Flat clean vector-like raster appearance. The main subject is the CURRENT, verified source-defined byko-stack-codex 0.4.0 workflow, not a proposal. Do not invent any additional step or mandatory approval.
+
+TITLE: "byko-stack-codex · 현재 작업 흐름"
+Subtitle: "AS-IS 0.4.0 · 요청 → 설계 → 구현 → 독립 검토 → 결과 전달"
+Small scope note: "현재 소스 지침 기준 · 요청 범위에 따라 단계를 선택 · 모든 작업이 전체 흐름을 거치지는 않음"
+
+LAYOUT:
+Top horizontal lane HUMAN, pale amber, label "사람 · 사용자".
+Middle large horizontal lane MAIN AGENT, pale blue background, label "메인 에이전트 · 목적 / 결정 / 위임 / 통합 / 완료 판단".
+Below that DELEGATED SUBAGENTS lane pale lavender, label "서브에이전트 · 맡은 범위 수행 후 메인에 반환".
+At bottom two compact bands: independent task paths, and state/limitations.
+Use a clear continuous primary path of SIX large numbered main boxes left to right across the main lane:
+1 "요청·범위 확인" small "기존 목적 / 코드 / 설계 / 진행 상태 확인"
+2 "목적·방법 설계" exact skill label "codex-spec-designer" small "요구사항·달성 조건·검증 접근 정리"
+3 "문서 리뷰 조율" skill "codex-review" small "독립 검토 요청 → 발견 사항 통합"
+4 "구현·검증" skill "codex-spec-dev" second line "직접 수행: byko-implement" small "변경 통합 · 실제 결과와 보존 동작 확인"
+5 "구현 리뷰 조율" skill "codex-review" small "독립 검토 요청 → 발견 사항 통합"
+6 "완료 판단·전달" small "현재 목적 달성 근거 / 남은 일 확인"
+Numbering is navigation, not a mandatory execution scheduler.
+
+PRIMARY ARROWS and branches:
+Human start box "작업 발생 → 요청 전달" above main1, arrow down to main1.
+main1 -> main2 label "설계 요청 / 개발에 설계 보완 필요".
+main2 -> main3 label "설계 초안·수정".
+main3 -> main4 label "통과 + 개발 요청".
+main4 -> main5 label "검증 가능한 구현".
+main5 -> main6 label "통과 + 목적 달성".
+main6 -> top right human endpoint "결과 확인" arrow up. Inside endpoint subtitle "결과물 · 검증 근거 · 남은 일".
+Important bypass main1 -> main4 along an upper dedicated track, label "개발 요청 + 기존 설계 충분".
+Important early exit main3 -> main6 along another clean track, label "통과 + 설계만 요청".
+Do not imply design-only automatically implements.
+
+HUMAN INTERVENTION:
+Above main2-main4 a clear amber box "필요한 판단·정보 제공" with two lines "목적의 중요한 모호함 / 요구·범위·권한 변경" and "사용자만 아는 사실 / 필요한 접근·환경".
+Amber paired arrow between main2 and this human box label "조사 후 질문 ↔ 답변 반영".
+Amber conditional connection between main4 and this human box label "새 결정·권한 필요 시".
+Prominent small amber note "매 단계 승인 절차는 없음 · 이미 합의된 목적·권한은 이어받음".
+Next to main2 a small yellow annotation "목적 확인은 명시됨 / 육하원칙·질문 절차는 고정되어 있지 않음". This is a current-state observation, not new behavior.
+
+SUBAGENT CONNECTIONS, aligned below appropriate main boxes, distinguish by purple border and names:
+Below main2: "분석가 · byko-analyst" / skill "byko-analyze" / small "허용 범위의 근거 조사". Dashed down arrow from main2 labelled "분리할 조사 필요 시", dashed return up arrow labelled "사실·근거·미확인". Small alternative "작은 조사는 메인이 같은 스킬로 직접".
+Below main3: "독립 검토자 · byko-reviewer" / skill "byko-review-document" / small "원래 요청·설계·근거 검토". Solid down arrow main3 to reviewer "검토 위임", solid up arrow "통과 / 수정 필요 / 미검증".
+Below main4: "구현자 · byko-implementer" / skill "byko-implement" / small "할당 범위 구현·자체 검증". Dashed down arrow "분리할 구현 필요 시", dashed return "변경·검증 근거". Small note "작은 수정은 메인이 직접".
+Below main5: "독립 검토자 · byko-reviewer" / skill "byko-review-code" / small "실제 동작·계약·회귀 검토". Solid down arrow main5 to reviewer "검토 위임", solid up arrow "통과 / 수정 필요 / 미검증".
+Note across reviewer boxes: "독립 컨텍스트 · reviewer는 수정하지 않음 · 수정과 재호출은 메인이 담당".
+Do NOT draw reviewers directly spawning designer/implementer/reviewer. Return loops must originate from main orchestration boxes.
+
+RED FEEDBACK LOOPS, extremely important and clearly arrowheaded, put on dedicated tracks between main lane and subagent lane or above main:
+main3 -> main2 red back arrow "문서 문제 → 설계 수정 → 재검토".
+main5 -> main4 red back arrow "코드 문제 → 수정·재검증 → 재리뷰".
+main4 -> itself small red local loop "자체 검증 실패 → 수정".
+main4 -> main2 long red return arrow "설계·코드 불일치 → 목적·근거로 재판단".
+On that long loop or nearby add small label "설계 변경 시 문서 리뷰부터 다시 연결". Avoid making redesign unconditional for every code bug.
+Loop paths and forward arrows must be visually unambiguous and not run through boxes.
+
+BOTTOM BAND — separate optional entry routes, NOT sequential steps of above main path:
+Label "단독 요청 · 필요한 작업만 수행하고 반환"
+Render four compact left-to-right mini paths side by side:
+A: "조사만" → "byko-analyze" → "분석 결과"
+B: "개별 구현만" → "byko-implement" → "구현 + 자체 검증"
+C: "종합 리뷰만" → "codex-review → byko-reviewer" → "판정·근거 반환"
+D: "설명 자료" → "byko-build-viewer" → "자료 + 확인 결과"
+For A/B/D small note under band "전문 스킬은 메인 또는 해당 역할이 직접 수행 · 단독 수행에 전체 workflow·독립 리뷰를 강제하지 않음".
+For D include actor "byko-viewer 또는 메인". Include nearby connected dashed optional small purple box "workflow에 뷰어 포함 시 / byko-review-viewer / 내용·화면·탐색 검토". Clarify default output "기본 HTML". No need to show source-code implementation details.
+For C note "단독 리뷰는 수정 없이 반환".
+These separate routes can have a shared small entry label "요청 종류에 따라 직접 진입"; they should not be connected as mandatory after main6.
+
+BOTTOM STATUS STRIP:
+Left document icon with "상태·근거: spec.md + progress.md" and smaller "기존 manifest·goal 상태가 있으면 계승 · 중복 상태 생성 안 함".
+Right grey/orange status box: "독립 리뷰·검증 환경 부족 → 미검증 / 재개 지점 기록" and small curved resume arrow labelled "환경·결정 확보 후 해당 단계 재개". This applies across relevant workflow stages, not only after completion. Do not show it as pass or completed.
+Small footnote: "지침상 흐름을 표시한 그림이며, 실제 실행의 성공을 보장하는 것은 아님."
+Legend: teal solid arrow "진행·결과 반환"; purple/teal dashed "필요시 위임"; red "수정·재실행"; amber "사람 개입".
+Tiny provenance footer "기준: shared/workflow.md · delegation.md · artifacts.md · 각 SKILL.md | HEAD a643b7c | 2026-10-19"
+
+Make the MAIN FLOW and feedback loops dominant. Keep labels concise and accurately rendered. This image should make it immediately clear what happens after a user hands over a task, which skill the main agent uses, where it optionally delegates, where independent reviewers operate, how findings cause a repeated step, when the user is needed, and where design-only or independent work ends. Use consistent names, never substitute generic fake agent names. No proposed improvements, no compulsory 5W1H gate, no universal user approval gate.
+
+EDIT 1
+Edit the supplied workflow diagram. Preserve the entire existing diagram's design, Korean text, six-step main flow, all actors, and all correct arrows. Make ONLY these necessary corrections. Do not change facts or introduce steps.
+
+1. The teal upper-right bypass labelled "통과 + 설계만 요청" currently starts at main step 4 "구현·검증", which is WRONG. Remove that entire upper-right bypass line and its label. Instead add a compact local teal terminal ABOVE step 3 "문서 리뷰 조율", reading "통과 + 설계만 요청 → 결과 전달", with a clear short arrow originating at step 3 and ending at this terminal. It must visibly exit from DOCUMENT REVIEW step 3, never from implementation step 4. This terminal is a legitimate endpoint. Keep the ordinary 3→4 arrow labelled "통과 + 개발 요청". Avoid crossing other lines; adjust top track spacing if necessary.
+
+2. In bottom standalone path D "설명 자료", the actual skill "byko-build-viewer" is missing. Explicitly show the full mini-flow "설명 자료 → byko-build-viewer → 자료 + 확인 결과". Put "byko-viewer 또는 메인" as the actor caption above or below this skill. Preserve the "기본 출력: HTML" note and the optional "workflow에 뷰어 포함 시 / byko-review-viewer / 내용·화면·탐색 검토" box to the right. Rearrange D to fit, do not truncate any identifier.
+
+3. The amber connector "조사 후 질문 ↔ 답변 반영" should actually connect main step 2 "목적·방법 설계" to the human "필요한 판단·정보 제공" box in both directions. In the current image the lower arrow ends in empty space on a teal bypass track. Extend/reroute it so the lower endpoint clearly touches step 2, without confusing a crossing with a junction. Similarly ensure "새 결정·권한 필요 시" links the human decision box and main step 4 with both arrowheads.
+
+4. Make result-return connectors from the two independent byko-reviewer boxes up to their respective main review orchestration boxes SOLID purple rather than dashed. These reviews are required by the design/development workflow, not optional delegations. Keep analyst and implementer optional delegation lines dashed. Add a small SOLID PURPLE arrow swatch to the legend labelled "독립 리뷰 위임·반환", if space allows.
+
+Keep every other element, red feedback loop, wording and current-state note unchanged. Prioritize precise arrow endpoints and readable Korean text. Output one final PNG, highest practical resolution and sharpness.
+
+EDIT 2
+Make one precise addition to this existing diagram. Preserve ALL text, boxes, arrows, colors and positions already present.
+
+A necessary bypass was accidentally lost: a development request with an already sufficient design skips the design and document-review stages. Add a TEAL directional bypass connector from the TOP edge of main step 1 "요청·범위 확인" to the TOP edge of main step 4 "구현·검증", with the exact label "개발 요청 + 기존 설계 충분".
+Route it in the narrow upper track between the human lane and the main boxes. It can travel up from step 1 to just below the human lane, horizontally across, then down to step 4. Place its label above the left portion of the line. At crossings with amber human-intervention connectors use a bridge/gap and no junction dot. Do not run the line through any text or through the compact document-review terminal above step 3; route its horizontal part ABOVE that terminal and the descending part to the LEFT of the amber connection into step 4 if necessary.
+
+Absolutely preserve the existing short upward connector from step 3 to "통과 + 설계만 요청 → 결과 전달". Do not modify that terminal or its source. Preserve all red feedback loops, the full bottom D skill "byko-build-viewer", the independent-review connections, and all other content. Only add the missing labelled 1-to-4 bypass. One PNG.
+

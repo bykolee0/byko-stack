@@ -1,4 +1,4 @@
 interface:
   display_name: "스펙 디자인"
-  short_description: "목적과 방법의 근거를 문서화하고 독립 검토까지 수행합니다."
-  default_prompt: "$codex-spec-designer로 개발 목적과 방법을 설계하고 문서 검토까지 진행해줘."
+  short_description: "목표와 사전 검토 기준을 구체화하고 계획·독립 검토로 연결합니다."
+  default_prompt: "$codex-spec-designer로 이 작업의 목표와 검증 기준부터 구체화하고 필요한 계획을 검토해줘."
