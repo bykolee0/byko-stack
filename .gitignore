@@ -27,3 +27,6 @@ logs/
 # Python
 __pycache__/
 *.pyc
+
+# Local research materials
+/temp/

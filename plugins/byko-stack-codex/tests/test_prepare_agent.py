@@ -15,7 +15,7 @@ class PrepareAgentTest(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name)
-        self.package = self.root / "installed package" / "0.4.0"
+        self.package = self.root / "installed package" / "candidate"
         shutil.copytree(PLUGIN, self.package, ignore=shutil.ignore_patterns("__pycache__"))
 
     def run_role(self, role):
@@ -27,6 +27,7 @@ class PrepareAgentTest(unittest.TestCase):
     def test_all_roles_work_outside_checkout(self):
         expected = {
             "byko-analyst": ["byko-analyze"],
+            "byko-designer": ["byko-propose"],
             "byko-implementer": ["byko-implement"],
             "byko-reviewer": ["byko-review-code", "byko-review-document", "byko-review-viewer"],
             "byko-viewer": ["byko-build-viewer"],

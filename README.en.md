@@ -130,36 +130,27 @@ Background comes before results for one reason: that is what lets a reader know 
 
 ### byko-stack-codex
 
-A Codex workflow that documents a **purpose, including its requirements**, and the **method and rationale** for achieving it. The same purpose guides design, implementation, verification, and completion. Skills specify meaningful outcomes and constraints while leaving investigation order and routine execution choices to the model.
+**0.6.0 — goal-driven playbooks for Codex.** `byko-work` handles issue, feature, incident, change, and resume requests through explicit diagnosis, change, or composed paths. Diagnosis-only requests stop at an evidence-backed explanation. Specialists remain independently usable.
 
 | Skill | Responsibility |
 | --- | --- |
-| `codex-spec-designer` | Clarifies the goal and initial verification criteria, then independently reviews the goal and implementation plan. |
-| `codex-spec-dev` | Implements the design and continues through outcome verification, independent review, and necessary fixes. |
-| `codex-review` | Starts independent reviewers and synthesizes design, implementation, and viewer findings against the purpose. |
+| `byko-work` | Own the request, goal, agreements, execution path, and outcome. |
+| `byko-design` | Establish the goal, preservation and verification criteria, then orchestrate proposals and independent review. |
+| `byko-review` | Coordinate independent document, code, and viewer reviews and validate findings. |
+| `byko-propose` | Produce a bounded design proposal without recursive orchestration. |
+| `byko-analyze`, `byko-implement` | Investigate or implement an assigned scope. |
+| `byko-review-document`, `byko-review-code`, `byko-review-viewer` | Perform the assigned review. |
+| `byko-build-viewer` | Produce reader-focused visual explanations; HTML by default. |
 
-Design and development **invoke review automatically**. Users do not need to call another review command. When documents and code disagree, the designer reconciles the design and the caller updates affected documents, code, and verification before continuing. Reviewers return findings; the caller owns fixes and re-review. Design-only and review-only requests retain their original scope.
+Start explicitly with `$byko-work` when reliable selection matters. Natural-language discovery depends on the host and model; the plugin is not an interception hook. Follow the default path, then reduce work only when observed evidence supports doing so. Recheck the goal and valid agreements when accepting results, changing direction, and finishing. Investigation follows relevant dependencies beyond example lists or repository boundaries within the authorized scope.
 
-New work defaults to `docs/specs/<work>/spec.md` and `progress.md`: the former holds the purpose (requirements and actual outcome criteria included), method, and rationale; the latter holds current status, remaining work, verification/review evidence, and the resume point. Split detailed material only when useful. Existing manifests, document/CI contracts, and goal state owners are reused without adding a duplicate state system.
+Reuse and update existing shared work artifacts. New persistent work starts at `docs/work/<task>/index.md`; split analysis, design, and verification only when independently reading or updating them is useful. No mandatory per-stage or per-agent document set. Handoffs connect goals and primary evidence to the actual target; a summary is not proof of complete context.
 
-In 0.3, `codex-eval-gate` is consolidated into the document and implementation modes of `codex-review`, and `codex-claude-eval` is removed. Pass an old eval target to `codex-review` instead. Existing work artifacts remain readable and are not automatically migrated or deleted. Automatic skill selection retains its default policy.
+Five bounded roles cover analysis, proposals, implementation, review, and viewer production. The [role guide](plugins/byko-stack-codex/agents/README.md) explains configuration and host limitations. The helper prepares spawn arguments; it does not register or execute agents or enforce permissions.
 
-Version 0.4 bundles analyst, implementer, reviewer, and viewer TOMLs in `agents/`, all defaulting to `gpt-6.1-sol` with `high` reasoning. Stack reads the installed files and passes their instructions and settings to the available spawning tool. A Git checkout or native agent registration is not required; bundling TOMLs does not automatically register native agents.
+**Migration from 0.5:** `codex-spec-dev` → `byko-work`, `codex-spec-designer` → `byko-design`, `codex-review` → `byko-review`. The plugin identity stays unchanged. Old-name wrappers are not retained. Existing task documents are reused, and historical reports keep their original names.
 
-Version 0.5 derives investigation questions before choosing perspectives, personas, and delegation boundaries; it does not require a fixed team or minimum headcount. Goals identify who, when, where, what, how, and why at the outcome level. Reviews assess the goal before adoption, the plan before implementation, and actual results before completion. Goal-only requests stop at that scope. [Verification criteria](plugins/byko-stack-codex/shared/verification.md) prepared before implementation remain required inputs to later review, with new risks added as they emerge. Rework requests identify the discrepancy, evidence, and scope to revisit. These are instruction contracts; their decision quality still requires behavioral validation.
-
-| Standalone specialist skill | Purpose |
-|---|---|
-| `byko-analyze` | Scoped code, document, or data investigation with evidence |
-| `byko-implement` | Bounded implementation, preserved contracts, and verification |
-| `byko-review-code` | Behavior, contracts, regressions, and downstream effects |
-| `byko-review-document` | Purpose, design, claims, and supporting evidence |
-| `byko-build-viewer` | Visual explanations for readers without prior context; HTML by default |
-| `byko-review-viewer` | Reader comprehension, visual communication, and navigation |
-
-Stack delegates work that benefits from a separate context and can apply the same skills directly for small tasks. Specialist skills do not require a fixed calling sequence, prior documents, or a particular agent. If spawning is unavailable, feasible work continues directly and missing independent review is disclosed. Viewers are created when useful; existing documents are not migrated automatically.
-
-See the [role guide](plugins/byko-stack-codex/agents/README.md), [delegation guide](plugins/byko-stack-codex/shared/delegation.md), [shared principles](plugins/byko-stack-codex/shared/workflow.md), and [document management](plugins/byko-stack-codex/shared/artifacts.md). Run helper checks with `python3 -m unittest discover -s plugins/byko-stack-codex/tests -v`.
+See the [implementation and validation report](docs/reports/byko-stack-codex-0.6.md) for observed behavior and remaining limits.
 
 ### byko-goal
 

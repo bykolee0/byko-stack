@@ -1,0 +1,4 @@
+interface:
+  display_name: "방법 후보 작성"
+  short_description: "목표·보존 조건에 맞는 방법과 실행·검증 접근을 제안합니다."
+  default_prompt: "$byko-propose로 이 목표와 근거에 맞는 방법 후보를 작성하고 단점·실패 조건·검증 접근을 설명해줘."

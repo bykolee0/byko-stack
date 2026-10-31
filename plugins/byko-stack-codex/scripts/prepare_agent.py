@@ -10,6 +10,7 @@ import tomllib
 
 ROLE_SKILLS = {
     "byko-analyst": ("byko-analyze",),
+    "byko-designer": ("byko-propose",),
     "byko-implementer": ("byko-implement",),
     "byko-reviewer": (
         "byko-review-code", "byko-review-document", "byko-review-viewer",

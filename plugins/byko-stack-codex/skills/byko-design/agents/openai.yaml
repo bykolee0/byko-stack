@@ -1,0 +1,4 @@
+interface:
+  display_name: "목표와 방법 설계"
+  short_description: "목표·보존·검증 기준을 정하고 방법과 계획을 독립 검토합니다."
+  default_prompt: "$byko-design으로 이 작업의 목표·보존·검증 기준을 구체화하고 필요한 방법과 계획을 검토해줘."
