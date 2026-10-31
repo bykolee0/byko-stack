@@ -9,6 +9,7 @@
 | 역할 | 맡기는 일 | 참고하는 스킬 |
 |---|---|---|
 | [byko-analyst](byko-analyst.toml) | 필요한 근거를 조사하고 공유 가능한 분석으로 전달 | [byko-analyze](../skills/byko-analyze/SKILL.md) |
+| [byko-designer](byko-designer.toml) | 목표·보존·검증 기준에 맞는 방법 후보 작성 | [byko-propose](../skills/byko-propose/SKILL.md) |
 | [byko-implementer](byko-implementer.toml) | 맡은 동작 구현·보존 계약 확인·자체 검증 | [byko-implement](../skills/byko-implement/SKILL.md) |
 | [byko-reviewer](byko-reviewer.toml) | 목적에 맞는 관점으로 검토하고 판정·근거 반환 | [코드](../skills/byko-review-code/SKILL.md), [문서](../skills/byko-review-document/SKILL.md), [뷰어](../skills/byko-review-viewer/SKILL.md) 중 필요한 지침 |
 | [byko-viewer](byko-viewer.toml) | 배경 없는 독자에게 설명·시각화·탐색을 제공 | [byko-build-viewer](../skills/byko-build-viewer/SKILL.md), 기본 HTML |
@@ -20,6 +21,10 @@
 역할은 고정 팀의 구성원이 아니다. 호출자가 문제에서 조사·검토 질문을 도출하고 필요한 관점과 수를 정한다. 목표·계획·구현의 검토 책임을 구분하고, [구현 전 검토 기준](../shared/verification.md)을 후속 리뷰에 전달한다. 반려 후 특정 finding을 다시 확인하는 작업은 최초 독립 검토와 구분한다.
 
 ## 호출과 범위
+
+일반 요청의 전체 진행은 [byko-work](../skills/byko-work/SKILL.md)가 소유한다. [byko-design](../skills/byko-design/SKILL.md)은 설계 조율, [byko-review](../skills/byko-review/SKILL.md)는 독립 검토 조율이다. 역할은 맡은 결과를 반환하고 이 조율 스킬을 자동으로 역호출하지 않는다. 특히 설계자는 `byko-propose`로 후보만 작성하며 스스로 검토자를 만들거나 자기 후보를 최종 채택하지 않는다.
+
+플레이북이 정한 기본 수행에서 출발하고 관련 근거로 충분성이 확인된 뒤 규모를 줄인다. 요약을 받은 작업자는 원래 목표·합의와 중요한 원자료·실제 연결을 확인하고, 메인은 반환된 충족 근거와 공백을 대조한다. 지정된 공동 자료는 갱신하며 역할마다 보고서 파일을 새로 만들지 않는다.
 
 호출자는 원하는 결과와 알고 있는 대상·범위를 자연어로 전달하면 된다. 입력 schema나 특정 문서 세트를 채울 필요는 없다. 역할은 누락된 맥락을 가능한 범위에서 직접 확인하고, 결과를 바꾸는 미결정 사항만 질문한다.
 

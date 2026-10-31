@@ -1,0 +1,4 @@
+interface:
+  display_name: "요청 처리"
+  short_description: "이슈·알람·기능·수정·재개를 조사부터 확인된 결과까지 조율합니다."
+  default_prompt: "$byko-work로 이 요청을 확인하고 필요한 조사·설계·구현·검증까지 진행해줘. 진단만 요청한 경우 원인·영향과 한계를 설명해줘."

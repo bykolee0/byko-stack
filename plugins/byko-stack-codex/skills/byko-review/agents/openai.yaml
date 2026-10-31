@@ -1,0 +1,4 @@
+interface:
+  display_name: "독립 검토"
+  short_description: "목표·계획·진단·실제 결과의 독립 검토를 구성하고 근거로 종합합니다."
+  default_prompt: "$byko-review로 이 목표·계획·진단·구현을 현재 대상과 원래 기준에 맞게 독립 검토해줘."
