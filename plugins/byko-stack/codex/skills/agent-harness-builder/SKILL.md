@@ -1,6 +1,6 @@
 ---
 name: agent-harness-builder
-description: 기존/신규 소프트웨어 프로젝트를 위한 agent-first harness를 설계하고 구축하는 스킬. "하네스 만들어줘", "AGENTS.md 구성", "프로젝트 온보딩 문서", "에이전트용 docs 구조", "guardrail 추가", "architecture/convention check", "spec/plan/eval workflow", "여러 프로젝트에서 재사용할 agent 운영 체계" 같은 요청에 사용한다. Existing/brownfield project에서는 repo를 먼저 분석하고, greenfield/new project에서는 intake 질문으로 제품·stack·확정 결정·open decision을 정리한 뒤 문서 구조와 가벼운 실행 guardrail을 만든다. 특정 언어나 프레임워크에 과적합하지 않고 프로젝트의 기존 test/lint/build 도구를 우선 사용한다.
+description: 기존/신규 소프트웨어 프로젝트를 위한 agent-first harness를 설계하고 구축하는 스킬. "하네스 만들어줘", "AGENTS.md 구성", "프로젝트 온보딩 문서", "에이전트용 docs 구조", "guardrail 추가", "architecture/convention check", "작업 계획·검증 workflow", "여러 프로젝트에서 재사용할 agent 운영 체계" 같은 요청에 사용한다. Existing/brownfield project에서는 repo를 먼저 분석하고, greenfield/new project에서는 intake 질문으로 제품·stack·확정 결정·open decision을 정리한 뒤 문서 구조와 가벼운 실행 guardrail을 만든다. 특정 언어나 프레임워크에 과적합하지 않고 프로젝트의 기존 test/lint/build 도구를 우선 사용한다.
 ---
 
 # Agent Harness Builder

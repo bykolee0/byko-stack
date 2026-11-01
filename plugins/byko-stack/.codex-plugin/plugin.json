@@ -1,7 +1,7 @@
 {
   "name": "byko-stack",
-  "version": "0.1.0",
-  "description": "A collection of skills for a spec-driven development workflow.",
+  "version": "0.5.0",
+  "description": "Agent harness builder skill for Codex. The Claude Code work loop of byko-stack is not exposed to Codex.",
   "author": {
     "name": "bykolee",
     "url": "https://github.com/bykolee0"
@@ -9,17 +9,17 @@
   "homepage": "https://github.com/bykolee0/byko-stack",
   "repository": "https://github.com/bykolee0/byko-stack",
   "keywords": [
-    "spec-driven-development",
+    "agent-harness",
+    "agents-md",
+    "guardrails",
     "skills",
-    "evaluation",
-    "codex",
-    "claude"
+    "codex"
   ],
-  "skills": "./skills/",
+  "skills": "./codex/skills/",
   "interface": {
     "displayName": "Byko Stack",
-    "shortDescription": "Spec-driven development workflow skills.",
-    "longDescription": "A skill-only workflow for designing implementation specs, building from approved specs, and evaluating specs, plans, and implementations with independent model checks.",
+    "shortDescription": "Project agent harness builder.",
+    "longDescription": "Exposes one Codex skill, agent-harness-builder, which analyzes an existing or new project and builds agent-facing docs (AGENTS.md, docs structure) and lightweight executable guardrails. The Claude Code skills of this plugin stay under skills/ and are not listed for Codex; for a Codex work loop use byko-stack-codex.",
     "developerName": "bykolee",
     "category": "Productivity",
     "capabilities": [
@@ -28,9 +28,9 @@
     ],
     "websiteURL": "https://github.com/bykolee0/byko-stack",
     "defaultPrompt": [
-      "Write an implementation spec for this change.",
-      "Implement this feature from the spec.",
-      "Evaluate this plan before implementation."
+      "Build an agent harness for this project.",
+      "Add AGENTS.md and a docs structure for coding agents.",
+      "Add lightweight guardrails that use this project's existing test and lint tools."
     ],
     "brandColor": "#2563EB"
   }

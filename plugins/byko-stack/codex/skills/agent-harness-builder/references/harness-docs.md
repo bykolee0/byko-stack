@@ -36,7 +36,7 @@ docs/
 | `docs/README.md` | docs system의 map |
 | `docs/references/` | external/vendor/domain docs의 local summary |
 | `docs/design-docs/` | ADR과 오래 유지되는 decisions |
-| `docs/specs/` | feature specs, ambiguity ledgers, traceability |
+| `docs/specs/` | feature specs, open questions, acceptance criteria와 test의 대조 |
 | `docs/exec-plans/` | long-running plans와 progress logs |
 | `docs/generated/` | DB schema 같은 machine-generated references |
 
@@ -62,21 +62,15 @@ date: YYYY-MM-DD
 
 허용 status: `proposed`, `accepted`, `superseded`.
 
-## Spec Workflow
+## Large Change Workflow
 
-큰 변경에는 다음 구조를 만든다.
+큰 변경에는 프로젝트가 이미 쓰는 위치(예: `docs/specs/<feature>/`)에 다음을 남긴다. 파일 이름과 개수는 프로젝트 convention을 따른다.
 
-```text
-docs/specs/<feature>/
-├── index.html               # 사람용 현황 (manifest.md에서 생성)
-├── spec.html                # 사람이 승인하는 문서
-├── implementation-plan.html # 사람이 승인하는 문서
-├── manifest.md
-├── ambiguity-ledger.md
-├── traceability.md
-└── eval-results/
-```
+- 목표와 범위: 무엇을 왜 바꾸는지, 하지 않을 것
+- 구현 전 검증 기준: 조건 → 관찰 가능한 기대, 기대의 출처, 확인 방법
+- open decision과 그 상태
+- 검증 결과: 실행한 command와 출력, 독립 review 결과
 
-사람이 열어서 결정을 내리는 문서만 HTML로 두고, 상태·근거·대조표는 마크다운으로 둔다 (byko-stack의 `shared/doc-system.md`). 프로젝트가 byko-stack을 쓰지 않는다면 전부 마크다운으로 해도 된다 — 중요한 것은 **독자에 따라 형식을 나눈다**는 원칙이다.
+사람이 열어서 결정을 내리는 문서는 그 독자에게 맞는 형식으로 두고, 상태·근거·대조표는 마크다운으로 둔다. 중요한 것은 **독자에 따라 형식을 나눈다**는 원칙이다.
 
 작업이 충분히 클 때만 사용한다. 작은 변경은 대화 안의 lightweight plan과 tests로 충분할 수 있다.

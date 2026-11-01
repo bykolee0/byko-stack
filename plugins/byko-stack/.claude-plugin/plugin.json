@@ -1,7 +1,7 @@
 {
   "name": "byko-stack",
-  "description": "스펙 기반 개발(Spec-Driven Development) 워크플로우를 위한 스킬 + 서브에이전트 모음. 메인 세션 오케스트레이션, 워크 매니페스트, 독립 평가/리뷰 에이전트, 사람이 승인하는 문서(스펙·구현 계획·현황)의 HTML 산출 포함",
-  "version": "0.4.0",
+  "description": "요청 하나를 목표 복원 → 연결된 근거 조사 → 설계 → 구현 → 검증으로 진행하고, 문제가 드러나면 원인 단계로 되돌아가는 작업 루프. 진입 스킬 work, 설계 design, 독립 검토 review·review-run과 조사·구현·후보 작성·검토 서브에이전트로 이루어진다. 작업 기록은 대상 리포의 .byko/work/에 두고 git에서 제외한다",
+  "version": "0.5.0",
   "author": {
     "name": "bykolee"
   }
