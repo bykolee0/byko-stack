@@ -19,7 +19,7 @@ byko-plugins/
 ├── .agents/plugins/marketplace.json   # Codex 마켓플레이스 (플러그인 목록)
 ├── .claude-plugin/marketplace.json    # Claude Code 마켓플레이스 (플러그인 목록)
 ├── plugins/
-│   ├── byko-stack/        # Claude Code용 스펙 기반 개발(SDD) 워크플로우 (skills + agents)
+│   ├── byko-stack/        # Claude Code용 작업 루프: 목표 → 조사 → 설계 → 구현 → 검증 (skills + agents)
 │   ├── byko-stack-codex/  # Codex용 목표 중심 플레이북·재사용 스킬
 │   ├── byko-goal/         # 장기 목표를 새 세션 반복으로 자율 완수하는 Claude Code 워크플로우
 │   └── byko-goal-codex/   # native goal + subagent 기반 Codex 포팅
@@ -34,8 +34,8 @@ plugins/<플러그인>/
 ├── skills/                       # 스킬 (각 <스킬>/SKILL.md)
 ├── agents/                       # 서브에이전트 정의
 ├── shared/                       # 스킬 간 공유 규약·템플릿
-├── scripts/                      # 스킬이 호출하는 도구 (byko-stack: 문서 빌드·검증)
-└── assets/                       # 산출물에 배포되는 리소스 (byko-stack: 문서 CSS/JS)
+├── scripts/                      # 스킬이 호출하는 도구
+└── codex/skills/                 # Codex에만 노출하는 스킬 (byko-stack: agent-harness-builder)
 ```
 
 ## 설치 방법
@@ -79,10 +79,10 @@ Claude Code 세션에서 아래 커맨드로 이 저장소를 마켓플레이스
 이 저장소는 Codex 플러그인 매니페스트도 함께 제공한다.
 
 - 마켓플레이스 메타데이터: `.agents/plugins/marketplace.json`
-- 플러그인 매니페스트: `plugins/byko-stack/.codex-plugin/plugin.json`
+- 플러그인 매니페스트: `plugins/byko-stack/.codex-plugin/plugin.json` (Codex에는 agent-harness-builder 하나만 노출)
 - Codex 전용 포팅 매니페스트: `plugins/byko-stack-codex/.codex-plugin/plugin.json`
 - 장기 goal 포팅 매니페스트: `plugins/byko-goal-codex/.codex-plugin/plugin.json`
-- 스킬 디렉토리: `plugins/byko-stack/skills/`
+- 스킬 디렉토리: `plugins/byko-stack/codex/skills/`
 - Codex 전용 스킬 디렉토리: `plugins/byko-stack-codex/skills/`
 - Codex goal 스킬 디렉토리: `plugins/byko-goal-codex/skills/`
 
@@ -92,52 +92,48 @@ Claude Code 세션에서 아래 커맨드로 이 저장소를 마켓플레이스
 
 ### byko-stack
 
-스펙 기반 개발(Spec-Driven Development) 워크플로우를 위한 스킬 + 서브에이전트 모음.
+**0.5.0 — 요청 하나를 목표부터 검증까지 잇고, 문제가 드러나면 원인 단계로 되돌아가는 Claude Code 작업 루프.** 기능 개발·수정·리팩터·리뷰 지적 반영, 제보·알람의 원인·영향 판단, 그런 작업의 재개가 들어오면 `work` 스킬이 요청 전체를 맡는다. 설명만 원하는 질문과 일반 대화에는 끼어들지 않는다.
 
-메인 세션은 오케스트레이터 역할을 한다 — 대화·결정·조율만 메인 컨텍스트에서 수행하고, 코드 분석·독립 평가·병렬 구현은 서브에이전트에 위임한다. 작업 단위마다 `manifest.md`(워크 매니페스트)가 산출물 경로와 단계 상태의 단일 진실 공급원이 되므로, 모든 스킬은 어떤 순서로든 독립 호출이 가능하다. 공유 컨벤션은 `plugins/byko-stack/shared/`를 참고한다.
+```
+요청 ─▶ work ─▶ 목표 복원 → 연결 조사 → 설계·검증 기준 → 구현 → 검증 → 인계·보고
+                   ▲                                                       │
+                   └───── 실패 원인에 따라 그 단계의 항목을 다시 연다 ─────┘
+```
 
-**문서 형식은 독자가 정한다.** 사람이 열어서 승인·판단하는 문서는 HTML로, 에이전트가 읽고 갱신하는 상태·근거는 마크다운으로 만든다.
+- **경로.** 요청이 원하는 결과로 진단(사건·원인·영향), 변경(기능·수정), 구성(비교·계획만 같은 그 밖의 작업) 가운데 하나를 고르고 그 경로의 항목을 작업 기록에 옮긴다. 생략한 항목은 지우지 않고 사유를 남긴다.
+- **순서를 지키는 곳은 셋이다.** 현행(as-is)을 보기 전에 방법을 정하지 않는다. 검증 기준은 구현 전에 쓴다. 최종 대상 commit에 독립 판정이 없으면 완료하지 않는다.
+- **무게는 조사로 정한다.** 기본은 '보통'이고, '가벼움'은 조사로 근거를 얻어야 줄어든다. 금액·권한·데이터·정책처럼 민감한 축은 사람에게 넘기지 않고 맞는 검토 관점과 보존 기준을 더한다.
+- **사람에게 가져가는 것.** 조사·검토·재조사로도 풀리지 않는 정책·의도 결정, 요청이 허락하지 않은 비가역·공유 환경 행동만 결정할 수 있는 형태로 가져간다. 단계별 승인 대기는 없다.
 
-| 산출물 | 형식 | 설명 |
+**작업 기록** — 대상 리포의 `.byko/work/<날짜-이름>/`. `.byko/.gitignore`(`*` 한 줄)로 git에서 빠지므로 PR에 섞이지 않는다.
+
+| 파일 | 담는 것 | 쓰는 이·읽는 이 |
 | --- | --- | --- |
-| `index.html` | HTML (생성) | 작업 현황 대시보드. `manifest.md`에서 자동 생성 — 사람의 진입점 |
-| `spec.html` | HTML (저작) | 스펙. **명세 나열이 아니라 해설** — `0.한 문장 → 1.개념 → 2.현재 구조 → 3.정상 흐름 → 4.막히는 지점 → 5.바꾸는 것 → 6.결정할 것 → 7.완성 조건`. 사람이 정해야 할 것은 본문 악센트에서 자동 수집돼 6장에 목록으로 뜬다 |
-| `implementation-plan.html` | HTML (저작) | 구현 계획. 단계·대상 파일·의존·영향 범위. 사람이 착수 승인을 내리는 문서 |
-| `manifest.md` · `ambiguity-ledger.md` · `traceability.md` · `progress.md` · `analysis/` · `eval-results/` · `review-results/` | md | 에이전트용 상태·근거. 사람에게는 스킬이 대화로 요약 보고한다 |
-
-배경을 먼저 깔고 결과를 나중에 두는 이유는 하나다 — 그래야 읽는 사람이 무엇을 승인하는지 안다. HTML 문서는 오프라인 결정적이다: 외부 CDN·스크립트 없이 로컬에서 열리고, 인쇄되며, JS 없이도 전부 읽힌다. 챕터 목차와 결정 목록은 `scripts/byko-doc.py`가 생성하므로 손으로 관리하지 않는다. 저작 규약은 `shared/doc-system.md`, 컴포넌트는 `shared/doc-snippets.md`, **완성된 실물 예시는 `plugins/byko-stack/examples/spec-example.html`**.
+| `brief.md` | 일의 정의: 요청 원문 위치, 육하원칙 대목표, 범위·하지 말 것, 리포 맥락 출처, 판단과 연결, 구현 전 검증 기준. 작성자의 결론은 넣지 않는다 | 메인이 쓴다. 모든 작업자가 먼저 읽고, 첫 검토자는 이것만 읽는다 |
+| `record.md` | 진행: 경로·무게·구성, 열린 항목, 진행 중 위임, 결정과 바뀐 것, 검토 결과와 처분 | 메인만 쓴다. 압축이나 새 세션 뒤 여기서 이어간다 |
+| 조사·후보·검토 결과 파일 | 서브에이전트 각자의 결과 | 그 서브에이전트가 쓴다 |
 
 **스킬**
 
 | 스킬 | 역할 |
 | --- | --- |
-| `spec-designer` | 유저와 대화하며 구현 스펙을 설계·작성한다. 분석은 code-explorer에 위임. |
-| `spec-dev` | 스펙(또는 합의된 AC)을 기반으로 구현한다. 큰 작업은 implementer 위임 루프로 오케스트레이션. |
-| `eval-gate` | evaluator 서브에이전트로 스펙/계획/구현의 정합성을 독립 검증하는 품질 게이트. |
-| `review` | reviewer 서브에이전트로 문제 정의에서 출발하는 fresh-eyes 리뷰 (방향·컨벤션·성실성). |
-| `codex-eval` | OpenAI Codex CLI로 다른 모델 시각에서 교차 검증한다. |
-| `agent-harness-builder` | 기존/신규 프로젝트를 분석해 에이전트용 문서 구조와 실행 가능한 guardrail을 구축한다. |
+| `work` | 진입 스킬. 요청 전체를 맡고, 작업 기록의 열린 항목으로 다음 행동을 고른다. `/byko-stack:work`로 직접 부를 수도 있다. |
+| `design` | 방법 선택과 구현 전 검증 기준. 실제로 다른 접근이 둘 이상이면 후보를 비교한다. "설계·계획만" 요청에 단독으로도 쓴다. |
+| `review` | 다관점 독립 검토 구성, 브랜치·PR 단독 리뷰, PR에 달린 외부 지적(리뷰 봇·CI) 판정. |
+| `review-run` | 다음 단계를 막는 독립 검토 하나를 reviewer에게 맡기고 결과를 기다린다. `work`·`design`·`review`가 부른다. |
 
 **서브에이전트** (`agents/`)
 
-| 에이전트 | 역할 |
-| --- | --- |
-| `code-explorer` | read-only 코드 분석 전담. 파일:라인 근거가 달린 사실만 보고한다. |
-| `evaluator` | 격리 컨텍스트에서 체크리스트 기반 정합성 평가 (APPROVED/NEEDS_REVISION). |
-| `reviewer` | 문제 정의 기준의 fresh-eyes 리뷰 (SOUND/CONCERNS/RETHINK). |
-| `implementer` | 독립 구현 단위(AC)를 코드 작성→테스트→보고까지 완결한다. |
+| 에이전트 | 역할 | 모델·effort |
+| --- | --- | --- |
+| `code-explorer` | 판단이 기대는 연결을 따라가는 분리 조사. 근거·확인 수준·찾아본 곳을 결과 파일로 돌려준다. | opus-5-5 · high |
+| `implementer` | 쓰기 범위가 분리된 구현 단위. 검증 기준에서 테스트를 유도하고 DONE·BLOCKED·BOUNCE_BACK으로 보고한다. | opus-5-5 · high |
+| `proposer` | 방향 하나의 설계 후보 작성. 다른 후보를 읽지 않고 판정하지 않는다. | opus-5-5 · high |
+| `reviewer` | 독립 검토. '기준 대조'와 '문제 적합' 두 입장으로 통과·수정 필요·미검증을 판정한다. | opus-5-5 · xhigh |
 
-#### 기본 워크플로우
+서브에이전트에는 Skill·Agent 도구가 없어 조율 스킬을 되부르거나 다시 위임하지 않는다.
 
-```
-/spec-designer             →  스펙 작성 (+ manifest 생성)
-/eval-gate spec            →  스펙 정합성 검증
-/spec-dev                  →  구현 (전략 A/B/C)
-/eval-gate implementation  →  구현 정합성 검증
-/review                    →  문제 정의 관점 fresh-eyes 리뷰
-```
-
-순서는 강제되지 않는다 — 문답만으로 `/spec-dev`를 바로 호출하거나, 임의 문서에 `/eval-gate custom`만 돌리는 것도 가능하다. 각 스킬의 세부 사용법은 해당 스킬 디렉토리의 `SKILL.md`를 참고한다.
+**0.4.0에서 바뀐 것.** spec 주도 단계 스킬(`spec-designer`·`spec-dev`·`eval-gate`·옛 `review`)은 위 네 스킬로 바꿨고 `codex-eval`은 뺐다. `evaluator`는 `reviewer`로 합쳤다. HTML 문서 체계(`shared/`, `scripts/byko-doc.py`, `assets/`, `examples/`)는 없앴다. 대상 리포에 남은 0.4.0 산출물(`docs/specs/…`)은 관련될 때 원자료로 읽고, 옮기거나 지우지 않는다. `agent-harness-builder`는 Codex에만 노출하는 `codex/skills/`로 옮겼다.
 
 ### byko-stack-codex
 

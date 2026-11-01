@@ -19,7 +19,7 @@ code에서 확인할 수 없을 때 질문한다.
 - 어떤 architectural boundary가 중요한가?
 - agent 또는 human이 이미 반복한 실수는 무엇인가?
 - 어떤 external knowledge를 repo-local docs로 옮겨야 하는가?
-- 원하는 autonomy level은 무엇인가? docs only, guardrails, spec workflow, eval workflow, PR automation 등.
+- 원하는 autonomy level은 무엇인가? docs only, guardrails, 계획·검증 workflow, PR automation 등.
 
 ## Taste and Convention Questions
 

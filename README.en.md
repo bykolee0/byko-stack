@@ -19,7 +19,7 @@ byko-plugins/
 ├── .agents/plugins/marketplace.json   # Codex marketplace (plugin list)
 ├── .claude-plugin/marketplace.json    # Claude Code marketplace (plugin list)
 ├── plugins/
-│   ├── byko-stack/        # Spec-driven development (SDD) workflow for Claude Code (skills + agents)
+│   ├── byko-stack/        # Claude Code work loop: goal → research → design → implement → verify (skills + agents)
 │   ├── byko-stack-codex/  # Codex-native port of the above
 │   ├── byko-goal/         # Claude Code workflow for long goals across repeated sessions
 │   └── byko-goal-codex/   # Codex port using native goals and subagents
@@ -34,8 +34,8 @@ plugins/<plugin>/
 ├── skills/                       # Skills (each <skill>/SKILL.md)
 ├── agents/                       # Subagent definitions
 ├── shared/                       # Cross-skill conventions and templates
-├── scripts/                      # Tools skills invoke (byko-stack: doc build/check)
-└── assets/                       # Resources shipped into artifacts (byko-stack: doc CSS/JS)
+├── scripts/                      # Tools skills invoke
+└── codex/skills/                 # Skills exposed only to Codex (byko-stack: agent-harness-builder)
 ```
 
 ## Installation
@@ -79,10 +79,10 @@ Pull the latest changes from the upstream repository:
 This repository also includes Codex plugin metadata.
 
 - Marketplace metadata: `.agents/plugins/marketplace.json`
-- Plugin manifest: `plugins/byko-stack/.codex-plugin/plugin.json`
+- Plugin manifest: `plugins/byko-stack/.codex-plugin/plugin.json` (exposes only agent-harness-builder to Codex)
 - Codex-native port manifest: `plugins/byko-stack-codex/.codex-plugin/plugin.json`
 - Long-goal port manifest: `plugins/byko-goal-codex/.codex-plugin/plugin.json`
-- Skill directory: `plugins/byko-stack/skills/`
+- Skill directory: `plugins/byko-stack/codex/skills/`
 - Codex-native skill directory: `plugins/byko-stack-codex/skills/`
 - Codex goal skill directory: `plugins/byko-goal-codex/skills/`
 
@@ -92,41 +92,48 @@ For local use, place this repository where Codex can read `.agents/plugins/marke
 
 ### byko-stack
 
-A collection of skills for a spec-driven development (SDD) workflow.
+**0.5.0 — a Claude Code work loop that carries one request from goal to verification and returns to the stage that caused a problem.** Feature work, fixes, refactors, review follow-ups, cause/impact questions about a report or alert, and resuming such work all enter through the `work` skill, which owns the whole request. Explanation-only questions and general conversation are left alone.
+
+```
+request ─▶ work ─▶ restore goal → trace links → design + checks → implement → verify → hand off
+                       ▲                                                                   │
+                       └───────────── reopen the items of the stage that caused it ────────┘
+```
+
+- **Paths.** The result the request wants picks one path: diagnosis (event, cause, impact), change (feature, fix), or composed (comparisons, plan-only, other work). The path's items are copied into the work record; a skipped item stays with its reason.
+- **Three ordering gates.** No method before the current state (as-is) is seen. Verification criteria are written before implementation. Nothing is done until the final target commit has an independent verdict.
+- **Weight comes from research.** The default is "normal"; "light" needs evidence from research. Sensitive axes (money, permissions, data, policy) add the matching review perspectives and preservation checks instead of being handed to a person.
+- **What goes to a person.** Only policy or intent decisions that research, review, and re-research cannot settle, and irreversible or shared-environment actions the request did not allow — in a form that can be decided. There are no per-stage approval waits.
+
+**Work record** — `.byko/work/<date-name>/` in the target repository. `.byko/.gitignore` (a single `*`) keeps it out of git, so it never lands in a PR.
+
+| File | Holds | Written / read by |
+| --- | --- | --- |
+| `brief.md` | Definition of the work: where the request lives, a 5W1H goal, scope and non-goals, repo context sources, judgments and the links they rest on, verification criteria written before implementation. No author conclusions | Written by the main session; every worker reads it first, and a first reviewer reads only this |
+| `record.md` | Progress: path, weight, composition, open items, running delegations, decisions and changes, review results and dispositions | Main session only; work resumes from here after compaction or in a new session |
+| Research, candidate, and review result files | Each subagent's own output | That subagent |
+
+**Skills**
 
 | Skill | Role |
 | --- | --- |
-| `spec-designer` | Designs implementation specs with codebase exploration, manifest state, and ambiguity tracking. |
-| `spec-dev` | Implements from a spec or agreed ACs with traceability and resumable progress files. |
-| `agent-harness-builder` | Builds agent-facing docs and executable guardrails for existing or new projects. |
-| `codex-eval` | Cross-validates artifacts from a different model's perspective via the OpenAI Codex CLI. |
-| `eval-gate` | Uses an evaluator subagent to gate spec/plan/implementation consistency. |
-| `review` | Uses a reviewer subagent for fresh-eyes problem fit, convention fit, and implementation integrity review. |
+| `work` | Entry skill. Owns the request and picks the next action from the open items in the work record. Also callable as `/byko-stack:work`. |
+| `design` | Method choice and pre-implementation verification criteria; compares candidates when genuinely different approaches exist. Also usable alone for design- or plan-only requests. |
+| `review` | Composes multi-perspective independent review, standalone branch/PR review, and judging external PR findings (review bots, CI). |
+| `review-run` | Hands one blocking independent review to the reviewer and waits for the result. Called by `work`, `design`, and `review`. |
 
-#### Default workflow
+**Subagents** (`agents/`)
 
-```
-/spec-designer             →  write the spec (+ manifest)
-/eval-gate spec            →  validate the spec
-/spec-dev                  →  implement
-/eval-gate implementation  →  validate the implementation
-/review                    →  fresh-eyes review from the problem definition
-```
-
-See each skill's `SKILL.md` for detailed usage.
-
-#### Artifact formats — the reader decides
-
-Documents a human opens to approve or decide are HTML; state and evidence that agents read and update stay Markdown.
-
-| Artifact | Format | Notes |
+| Agent | Role | Model · effort |
 | --- | --- | --- |
-| `index.html` | HTML (generated) | Status dashboard generated from `manifest.md` — the human entry point |
-| `spec.html` | HTML (authored) | **An explainer, not a specification list** — `0.one sentence → 1.concepts → 2.current structure → 3.happy path → 4.where it breaks → 5.what changes → 6.what you must decide → 7.done criteria`. Decisions are collected automatically from inline accents into chapter 6 |
-| `implementation-plan.html` | HTML (authored) | Steps, target files, dependencies, blast radius — the document a human approves before code changes |
-| `manifest.md`, `ambiguity-ledger.md`, `traceability.md`, `progress.md`, `analysis/`, `eval-results/`, `review-results/` | Markdown | Agent-facing state and evidence; skills summarize these in conversation |
+| `code-explorer` | Separate research that follows the links a judgment rests on; returns evidence, confidence level, and places searched in a result file. | opus-5-5 · high |
+| `implementer` | Implementation unit with a separate write scope; derives tests from the criteria and reports DONE, BLOCKED, or BOUNCE_BACK. | opus-5-5 · high |
+| `proposer` | Writes one design candidate for one direction; does not read other candidates or judge. | opus-5-5 · high |
+| `reviewer` | Independent review from two stances, criteria check and problem fit; verdict is pass, needs changes, or unverified. | opus-5-5 · xhigh |
 
-Background comes before results for one reason: that is what lets a reader know what they are approving. HTML artifacts are offline-deterministic — no CDN or external scripts, print-friendly, fully readable with JavaScript disabled. Chapter navigation and the decision list are generated by `scripts/byko-doc.py`. Conventions live in `shared/doc-system.md`, components in `shared/doc-snippets.md`, and a **finished example in `plugins/byko-stack/examples/spec-example.html`**.
+Subagents have no Skill or Agent tool, so they cannot call the orchestration skills back or delegate again.
+
+**Changes from 0.4.0.** The spec-driven stage skills (`spec-designer`, `spec-dev`, `eval-gate`, the old `review`) are replaced by the four skills above, and `codex-eval` is removed. `evaluator` is merged into `reviewer`. The HTML document system (`shared/`, `scripts/byko-doc.py`, `assets/`, `examples/`) is gone. 0.4.0 artifacts left in a target repository (`docs/specs/…`) are read as source material when relevant and are neither migrated nor deleted. `agent-harness-builder` moved to `codex/skills/`, which only Codex sees.
 
 ### byko-stack-codex
 
