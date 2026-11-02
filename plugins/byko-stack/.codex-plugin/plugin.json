@@ -1,6 +1,6 @@
 {
   "name": "byko-stack",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "Agent harness builder skill for Codex. The Claude Code work loop of byko-stack is not exposed to Codex.",
   "author": {
     "name": "bykolee",

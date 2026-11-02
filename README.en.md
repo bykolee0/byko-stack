@@ -92,7 +92,7 @@ For local use, place this repository where Codex can read `.agents/plugins/marke
 
 ### byko-stack
 
-**0.5.0 — a Claude Code work loop that carries one request from goal to verification and returns to the stage that caused a problem.** Feature work, fixes, refactors, review follow-ups, cause/impact questions about a report or alert, and resuming such work all enter through the `work` skill, which owns the whole request. Explanation-only questions and general conversation are left alone.
+**0.5.1 — a Claude Code work loop that carries one request from goal to verification and returns to the stage that caused a problem.** Feature work, fixes, refactors, review follow-ups, cause/impact questions about a report or alert, and resuming such work all enter through the `work` skill, which owns the whole request. Explanation-only questions and general conversation are left alone.
 
 ```
 request ─▶ work ─▶ restore goal → trace links → design + checks → implement → verify → hand off
@@ -129,9 +129,11 @@ request ─▶ work ─▶ restore goal → trace links → design + checks → 
 | `code-explorer` | Separate research that follows the links a judgment rests on; returns evidence, confidence level, and places searched in a result file. | opus-5-5 · high |
 | `implementer` | Implementation unit with a separate write scope; derives tests from the criteria and reports DONE, BLOCKED, or BOUNCE_BACK. | opus-5-5 · high |
 | `proposer` | Writes one design candidate for one direction; does not read other candidates or judge. | opus-5-5 · high |
-| `reviewer` | Independent review from two stances, criteria check and problem fit; verdict is pass, needs changes, or unverified. | opus-5-5 · xhigh |
+| `reviewer` | Independent review from two stances, criteria check and problem fit; verdict is pass, needs changes, or unverified. | opus-5-5 · high |
 
 Subagents have no Skill or Agent tool, so they cannot call the orchestration skills back or delegate again.
+
+**Effort.** `work` runs the turn it is invoked in at high. `review` and `design` invoked on their own follow the session effort, because the main's brief and review lenses decided review accuracy. If the session is at xhigh or max, only that turn runs at high, and the session level returns with the next prompt. Opus 5.5 thinks much longer per call at xhigh and max, and in same-case evaluations most of this loop's time came from that output (measurements in the [report](docs/reports/byko-stack-0.5.md)). In interactive sessions, turns opened by a delegation notification run at the session effort again, so the effect is limited to the invoking turn. To run at a higher effort, set the `CLAUDE_CODE_EFFORT_LEVEL` environment variable. It takes precedence over skill and subagent settings, so every subagent, the reviewer included, runs at that level too.
 
 **Changes from 0.4.0.** The spec-driven stage skills (`spec-designer`, `spec-dev`, `eval-gate`, the old `review`) are replaced by the four skills above, and `codex-eval` is removed. `evaluator` is merged into `reviewer`. The HTML document system (`shared/`, `scripts/byko-doc.py`, `assets/`, `examples/`) is gone. 0.4.0 artifacts left in a target repository (`docs/specs/…`) are read as source material when relevant and are neither migrated nor deleted. `agent-harness-builder` moved to `codex/skills/`, which only Codex sees.
 
