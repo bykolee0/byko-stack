@@ -22,7 +22,8 @@ byko-plugins/
 │   ├── byko-stack/        # Claude Code work loop: goal → research → design → implement → verify (skills + agents)
 │   ├── byko-stack-codex/  # Codex-native port of the above
 │   ├── byko-goal/         # Claude Code workflow for long goals across repeated sessions
-│   └── byko-goal-codex/   # Codex port using native goals and subagents
+│   ├── byko-goal-codex/   # Codex port using native goals and subagents
+│   └── byko-harness/      # Build and maintain a repository harness (shared by Claude Code and Codex)
 └── README.md
 ```
 
@@ -34,8 +35,7 @@ plugins/<plugin>/
 ├── skills/                       # Skills (each <skill>/SKILL.md)
 ├── agents/                       # Subagent definitions
 ├── shared/                       # Cross-skill conventions and templates
-├── scripts/                      # Tools skills invoke
-└── codex/skills/                 # Skills exposed only to Codex (byko-stack: agent-harness-builder)
+└── scripts/                      # Tools skills invoke
 ```
 
 ## Installation
@@ -64,7 +64,7 @@ Install any plugin from the registered marketplace:
 /plugin install byko-stack@byko-plugins
 ```
 
-After installation, run `/plugin` to verify it is active.
+The repository harness builder installs separately with `/plugin install byko-harness@byko-plugins`. After installation, run `/plugin` to verify it is active.
 
 #### 3. Update
 
@@ -79,20 +79,27 @@ Pull the latest changes from the upstream repository:
 This repository also includes Codex plugin metadata.
 
 - Marketplace metadata: `.agents/plugins/marketplace.json`
-- Plugin manifest: `plugins/byko-stack/.codex-plugin/plugin.json` (exposes only agent-harness-builder to Codex)
+- Harness plugin manifest: `plugins/byko-harness/.codex-plugin/plugin.json` (the same plugin Claude Code uses)
 - Codex-native port manifest: `plugins/byko-stack-codex/.codex-plugin/plugin.json`
 - Long-goal port manifest: `plugins/byko-goal-codex/.codex-plugin/plugin.json`
-- Skill directory: `plugins/byko-stack/codex/skills/`
+- Harness skill directory: `plugins/byko-harness/skills/`
 - Codex-native skill directory: `plugins/byko-stack-codex/skills/`
 - Codex goal skill directory: `plugins/byko-goal-codex/skills/`
 
 For local use, place this repository where Codex can read `.agents/plugins/marketplace.json`, or register this repository as a local marketplace in your Codex plugin marketplace configuration.
 
+If you enabled byko-stack in Codex before, update the marketplace, remove the old plugin, and install byko-harness. Otherwise the old `agent-harness-builder` left in the cache keeps loading alongside the new skill. The remove command works even when byko-stack no longer appears in the list.
+
+```
+codex plugin remove byko-stack@byko-plugins
+codex plugin add byko-harness@byko-plugins
+```
+
 ## Plugins
 
 ### byko-stack
 
-**0.5.1 — a Claude Code work loop that carries one request from goal to verification and returns to the stage that caused a problem.** Feature work, fixes, refactors, review follow-ups, cause/impact questions about a report or alert, and resuming such work all enter through the `work` skill, which owns the whole request. Explanation-only questions and general conversation are left alone.
+**0.5.2 — a Claude Code work loop that carries one request from goal to verification and returns to the stage that caused a problem.** Feature work, fixes, refactors, review follow-ups, cause/impact questions about a report or alert, and resuming such work all enter through the `work` skill, which owns the whole request. Explanation-only questions and general conversation are left alone.
 
 ```
 request ─▶ work ─▶ restore goal → trace links → design + checks → implement → verify → hand off
@@ -135,7 +142,7 @@ Subagents have no Skill or Agent tool, so they cannot call the orchestration ski
 
 **Effort.** `work` runs the turn it is invoked in at high. `review` and `design` invoked on their own follow the session effort, because the main's brief and review lenses decided review accuracy. If the session is at xhigh or max, only that turn runs at high, and the session level returns with the next prompt. Opus 5.5 thinks much longer per call at xhigh and max, and in same-case evaluations most of this loop's time came from that output (measurements in the [report](docs/reports/byko-stack-0.5.md)). In interactive sessions, turns opened by a delegation notification run at the session effort again, so the effect is limited to the invoking turn. To run at a higher effort, set the `CLAUDE_CODE_EFFORT_LEVEL` environment variable. It takes precedence over skill and subagent settings, so every subagent, the reviewer included, runs at that level too.
 
-**Changes from 0.4.0.** The spec-driven stage skills (`spec-designer`, `spec-dev`, `eval-gate`, the old `review`) are replaced by the four skills above, and `codex-eval` is removed. `evaluator` is merged into `reviewer`. The HTML document system (`shared/`, `scripts/byko-doc.py`, `assets/`, `examples/`) is gone. 0.4.0 artifacts left in a target repository (`docs/specs/…`) are read as source material when relevant and are neither migrated nor deleted. `agent-harness-builder` moved to `codex/skills/`, which only Codex sees.
+**Changes from 0.4.0.** The spec-driven stage skills (`spec-designer`, `spec-dev`, `eval-gate`, the old `review`) are replaced by the four skills above, and `codex-eval` is removed. `evaluator` is merged into `reviewer`. The HTML document system (`shared/`, `scripts/byko-doc.py`, `assets/`, `examples/`) is gone. 0.4.0 artifacts left in a target repository (`docs/specs/…`) are read as source material when relevant and are neither migrated nor deleted. `agent-harness-builder` moved to `codex/skills/`, which only Codex sees, and in 0.5.2 it moved to the standalone plugin [byko-harness](#byko-harness). byko-stack is no longer in the Codex marketplace. If you already installed it in Codex, remove it as described in the [Codex section](#codex).
 
 ### byko-stack-codex
 
@@ -220,6 +227,40 @@ $byko-goal-codex:codex-goal-run <slug>
 ```
 
 If a run stops at a cap, approval boundary, or repeated blocker, invoke the same run skill again to resume from `state.json` and the journal. Shared contracts live in `plugins/byko-goal-codex/shared/`.
+
+### byko-harness
+
+**0.1.0 — builds and maintains a harness for coding agents in a repository.** Claude Code and Codex use the same plugin. It has one skill, `agent-harness-builder`.
+
+The goal is that people stop repeating the same explanations to agents working in a repository. The repository's own goals, policies, domain, structure, and operating knowledge go where agents actually read and follow them.
+
+```
+<repo>/
+├── AGENTS.md          Center: overview and goals, area index (when to open), code rules, document format, commands, open decisions, upkeep rules
+├── CLAUDE.md          @AGENTS.md
+└── docs/
+    ├── wiki/          Final definitions (SSOT), with policies at the core. Frontmatter required; the first section is "## 정의" (Definition)
+    │   ├── policies/  Policies + index.md (status: confirmed / from-code)
+    │   └── domain.md · architecture.md · infrastructure.md · deploy.md · testing.md
+    ├── records/       Decision and work records (a log), no upkeep duty
+    └── references/    Reference material + index.md
+Checks: harness format checks inside the repository's test tool + enforcement checks for must-keep policies
+```
+
+| Case | What it does |
+| --- | --- |
+| New development repository | Collects decisions, writes pages only for what is decided, and adds the format checks |
+| Existing development repository | Reads code and docs (parallel per-area analysis for large repositories) and turns only consistently supported facts into definitions. Fills gaps by default; on request, aligns existing docs into this layout |
+| Harness upkeep | Re-checks only the scope that changed since each page's `verified` commit, ingests new records, and fixes the format |
+| Non-development repository | Same layers; pages are chosen by questions (final definitions, rules, what gets rediscovered, how results are checked) |
+
+```text
+/byko-harness:agent-harness-builder set up a harness for this repository
+/byko-harness:agent-harness-builder check the harness and bring it up to date
+$agent-harness-builder set up a harness for this repository          # Codex
+```
+
+A policy whose evidence conflicts is not written; it goes to the "open decisions" section of AGENTS.md and is asked about when a person is in the conversation. The design rationale and verification are in the [report](docs/reports/byko-harness-0.1.md).
 
 ## Adding a new plugin
 

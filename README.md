@@ -22,7 +22,8 @@ byko-plugins/
 │   ├── byko-stack/        # Claude Code용 작업 루프: 목표 → 조사 → 설계 → 구현 → 검증 (skills + agents)
 │   ├── byko-stack-codex/  # Codex용 목표 중심 플레이북·재사용 스킬
 │   ├── byko-goal/         # 장기 목표를 새 세션 반복으로 자율 완수하는 Claude Code 워크플로우
-│   └── byko-goal-codex/   # native goal + subagent 기반 Codex 포팅
+│   ├── byko-goal-codex/   # native goal + subagent 기반 Codex 포팅
+│   └── byko-harness/      # 리포 하네스 구축·유지 (Claude Code·Codex 공용)
 └── README.md
 ```
 
@@ -34,8 +35,7 @@ plugins/<플러그인>/
 ├── skills/                       # 스킬 (각 <스킬>/SKILL.md)
 ├── agents/                       # 서브에이전트 정의
 ├── shared/                       # 스킬 간 공유 규약·템플릿
-├── scripts/                      # 스킬이 호출하는 도구
-└── codex/skills/                 # Codex에만 노출하는 스킬 (byko-stack: agent-harness-builder)
+└── scripts/                      # 스킬이 호출하는 도구
 ```
 
 ## 설치 방법
@@ -64,7 +64,7 @@ Claude Code 세션에서 아래 커맨드로 이 저장소를 마켓플레이스
 /plugin install byko-stack@byko-plugins
 ```
 
-설치 후 `/plugin` 커맨드로 활성 상태를 확인할 수 있다.
+리포 하네스 빌더는 `/plugin install byko-harness@byko-plugins`로 따로 설치한다. 설치 후 `/plugin` 커맨드로 활성 상태를 확인할 수 있다.
 
 #### 3. 업데이트
 
@@ -79,20 +79,27 @@ Claude Code 세션에서 아래 커맨드로 이 저장소를 마켓플레이스
 이 저장소는 Codex 플러그인 매니페스트도 함께 제공한다.
 
 - 마켓플레이스 메타데이터: `.agents/plugins/marketplace.json`
-- 플러그인 매니페스트: `plugins/byko-stack/.codex-plugin/plugin.json` (Codex에는 agent-harness-builder 하나만 노출)
+- 하네스 플러그인 매니페스트: `plugins/byko-harness/.codex-plugin/plugin.json` (Claude Code와 같은 플러그인을 함께 쓴다)
 - Codex 전용 포팅 매니페스트: `plugins/byko-stack-codex/.codex-plugin/plugin.json`
 - 장기 goal 포팅 매니페스트: `plugins/byko-goal-codex/.codex-plugin/plugin.json`
-- 스킬 디렉토리: `plugins/byko-stack/codex/skills/`
+- 하네스 스킬 디렉토리: `plugins/byko-harness/skills/`
 - Codex 전용 스킬 디렉토리: `plugins/byko-stack-codex/skills/`
 - Codex goal 스킬 디렉토리: `plugins/byko-goal-codex/skills/`
 
 로컬에서 사용할 때는 Codex가 이 저장소의 `.agents/plugins/marketplace.json`을 읽을 수 있는 위치에 두거나, Codex 환경의 플러그인 마켓플레이스 설정에서 이 저장소를 로컬 마켓플레이스로 등록한다.
 
+예전에 Codex에서 byko-stack을 켜 두었다면, 마켓플레이스를 갱신한 뒤 옛 플러그인을 지우고 byko-harness를 설치한다. 지우지 않으면 캐시에 남은 옛 `agent-harness-builder`가 새 스킬과 함께 로드된다. 목록에 byko-stack이 보이지 않아도 제거 명령은 동작한다.
+
+```
+codex plugin remove byko-stack@byko-plugins
+codex plugin add byko-harness@byko-plugins
+```
+
 ## 플러그인 목록
 
 ### byko-stack
 
-**0.5.1 — 요청 하나를 목표부터 검증까지 잇고, 문제가 드러나면 원인 단계로 되돌아가는 Claude Code 작업 루프.** 기능 개발·수정·리팩터·리뷰 지적 반영, 제보·알람의 원인·영향 판단, 그런 작업의 재개가 들어오면 `work` 스킬이 요청 전체를 맡는다. 설명만 원하는 질문과 일반 대화에는 끼어들지 않는다.
+**0.5.2 — 요청 하나를 목표부터 검증까지 잇고, 문제가 드러나면 원인 단계로 되돌아가는 Claude Code 작업 루프.** 기능 개발·수정·리팩터·리뷰 지적 반영, 제보·알람의 원인·영향 판단, 그런 작업의 재개가 들어오면 `work` 스킬이 요청 전체를 맡는다. 설명만 원하는 질문과 일반 대화에는 끼어들지 않는다.
 
 ```
 요청 ─▶ work ─▶ 목표 복원 → 연결 조사 → 설계·검증 기준 → 구현 → 검증 → 인계·보고
@@ -135,7 +142,7 @@ Claude Code 세션에서 아래 커맨드로 이 저장소를 마켓플레이스
 
 **effort.** `work`는 부른 턴을 high로 돈다. 단독으로 부른 `review`·`design`은 세션 effort를 따른다(브리프와 검토 관점을 쓰는 메인의 판단이 검토 정확도를 좌우했다). 세션이 xhigh·max여도 그 턴만 high이고, 다음 입력부터 세션 값으로 돌아온다. Opus 5.5는 xhigh·max에서 호출마다 훨씬 길게 생각하고, 같은 사례 평가에서 이 루프의 시간 대부분이 그 출력에서 나왔다(측정은 [보고서](docs/reports/byko-stack-0.5.md)). 대화형 세션에서는 위임 완료 알림으로 열린 다음 턴부터 세션 effort로 돌아가므로 효과는 부르는 턴에 한정된다. 더 높은 effort로 돌리려면 `CLAUDE_CODE_EFFORT_LEVEL` 환경변수를 쓴다. 스킬과 서브에이전트 설정보다 앞서므로 검토자를 포함한 모든 서브에이전트도 그 값으로 돈다.
 
-**0.4.0에서 바뀐 것.** spec 주도 단계 스킬(`spec-designer`·`spec-dev`·`eval-gate`·옛 `review`)은 위 네 스킬로 바꿨고 `codex-eval`은 뺐다. `evaluator`는 `reviewer`로 합쳤다. HTML 문서 체계(`shared/`, `scripts/byko-doc.py`, `assets/`, `examples/`)는 없앴다. 대상 리포에 남은 0.4.0 산출물(`docs/specs/…`)은 관련될 때 원자료로 읽고, 옮기거나 지우지 않는다. `agent-harness-builder`는 Codex에만 노출하는 `codex/skills/`로 옮겼다.
+**0.4.0에서 바뀐 것.** spec 주도 단계 스킬(`spec-designer`·`spec-dev`·`eval-gate`·옛 `review`)은 위 네 스킬로 바꿨고 `codex-eval`은 뺐다. `evaluator`는 `reviewer`로 합쳤다. HTML 문서 체계(`shared/`, `scripts/byko-doc.py`, `assets/`, `examples/`)는 없앴다. 대상 리포에 남은 0.4.0 산출물(`docs/specs/…`)은 관련될 때 원자료로 읽고, 옮기거나 지우지 않는다. `agent-harness-builder`는 Codex에만 노출하는 `codex/skills/`로 옮겼다가, 0.5.2에서 독립 플러그인 [byko-harness](#byko-harness)로 옮겼다. byko-stack은 이제 Codex 마켓플레이스에 없다. Codex에 이미 설치했다면 [Codex 절](#codex)의 안내대로 지운다.
 
 ### byko-stack-codex
 
@@ -222,6 +229,40 @@ $byko-goal-codex:codex-goal-run <slug>
 ```
 
 실행이 cap, 사용자 승인, 반복 blocker에서 멈춰도 같은 run skill을 다시 호출하면 `state.json`과 journal에서 이어진다. 공유 계약은 `plugins/byko-goal-codex/shared/`에 있다.
+
+### byko-harness
+
+**0.1.0 — 리포에 코딩 에이전트용 하네스를 만들고 유지하는 플러그인.** Claude Code와 Codex가 같은 플러그인을 쓴다. 스킬은 `agent-harness-builder` 하나다.
+
+목적은 에이전트가 그 리포에서 일할 때 사람이 같은 설명을 반복하지 않게 하는 것이다. 리포 고유의 목표·정책·도메인·구조·운영 지식을, 에이전트가 실제로 읽고 따르는 자리에 정리한다.
+
+```
+<repo>/
+├── AGENTS.md          중심: 개요·목표, 영역 색인(언제 여는지), 코드 규칙, 문서 규격, 명령, 미결정, 지식 관리
+├── CLAUDE.md          @AGENTS.md
+└── docs/
+    ├── wiki/          최종 정의(SSOT). 정책이 중추. 프론트매터 필수, 첫 절은 "## 정의"
+    │   ├── policies/  정책 + index.md (상태: confirmed·from-code)
+    │   └── domain.md · architecture.md · infrastructure.md · deploy.md · testing.md
+    ├── records/       결정·작업 기록(로그). 관리 의무 없음
+    └── references/    참고 자료 + index.md
+검사: 리포 test 도구 안의 하네스 규격 검사 + 꼭 지킬 정책의 강제 검사
+```
+
+| 경우 | 하는 일 |
+| --- | --- |
+| 새 개발 리포 | 결정을 모아 정해진 것만 페이지로 만들고 규격 검사를 붙인다 |
+| 기존 개발 리포 | 코드·문서를 읽고(큰 리포는 영역별 병렬 분석) 근거가 서로 맞는 것만 정의로 올린다. 기본은 보완, 요청하면 정렬(기존 문서 이동) |
+| 하네스 유지 | `verified` 커밋 이후 바뀐 범위만 다시 대조하고, 새 기록을 반영하고, 형식을 고친다 |
+| 개발이 아닌 리포 | 같은 층을 쓰고, 페이지는 질문(최종 정의·규칙·매번 다시 찾는 것·확인 방법)으로 정한다 |
+
+```text
+/byko-harness:agent-harness-builder 이 리포에 하네스를 구성해줘
+/byko-harness:agent-harness-builder 하네스를 점검해서 최신으로 맞춰줘
+$agent-harness-builder 이 리포에 하네스를 구성해줘          # Codex
+```
+
+근거가 서로 어긋나는 정책은 쓰지 않고 AGENTS.md "미결정"에 올리고, 사람이 대화에 있으면 그때 묻는다. 설계 근거와 검증은 [보고서](docs/reports/byko-harness-0.1.md)에 있다.
 
 ## 신규 플러그인 추가
 

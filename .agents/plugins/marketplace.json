@@ -5,10 +5,10 @@
   },
   "plugins": [
     {
-      "name": "byko-stack",
+      "name": "byko-harness",
       "source": {
         "source": "local",
-        "path": "./plugins/byko-stack"
+        "path": "./plugins/byko-harness"
       },
       "policy": {
         "installation": "AVAILABLE",

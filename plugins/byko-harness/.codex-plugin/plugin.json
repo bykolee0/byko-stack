@@ -1,0 +1,37 @@
+{
+  "name": "byko-harness",
+  "version": "0.1.0",
+  "description": "리포에 코딩 에이전트용 하네스를 만들고 유지한다. AGENTS.md 중심 색인, 정책 중심 docs/wiki(최종 정의), 리포 테스트로 하는 문서 규격 검사.",
+  "author": {
+    "name": "bykolee",
+    "url": "https://github.com/bykolee0"
+  },
+  "homepage": "https://github.com/bykolee0/byko-stack",
+  "repository": "https://github.com/bykolee0/byko-stack",
+  "keywords": [
+    "agent-harness",
+    "agents-md",
+    "llm-wiki",
+    "policies",
+    "codex",
+    "claude-code"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Byko Harness",
+    "shortDescription": "리포 하네스 구축·유지",
+    "longDescription": "agent-harness-builder 스킬 하나를 제공합니다. 리포를 분석해 AGENTS.md를 중심 색인으로 두고, 정책·도메인·구조·운영 지식을 docs/wiki에 근거가 달린 최종 정의로 정리합니다. 결정·작업 기록은 records, 참고 자료는 references에 두고, 문서 규격은 리포의 테스트로 검사합니다. 새 리포, 기존 리포(보완·정렬), 이미 있는 하네스의 점검·최신화, 개발이 아닌 리포를 다룹니다.",
+    "developerName": "bykolee",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "이 리포에 에이전트용 하네스를 구성해줘.",
+      "이 리포의 하네스를 점검해서 최신으로 맞춰줘.",
+      "새 프로젝트를 시작해. 정한 내용으로 하네스부터 잡아줘."
+    ],
+    "brandColor": "#7C3AED"
+  }
+}
