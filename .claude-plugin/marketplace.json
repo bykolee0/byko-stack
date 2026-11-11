@@ -1,6 +1,6 @@
 {
   "name": "byko-plugins",
-  "description": "Claude Code용 byko 플러그인: byko-stack(요청을 목표부터 검증까지 잇는 작업 루프), byko-goal(장기 목표를 새 세션 반복으로 완수)",
+  "description": "Claude Code용 byko 플러그인: byko-stack(요청을 목표부터 검증까지 잇는 작업 루프), byko-goal(장기 목표를 새 세션 반복으로 완수), byko-harness(리포 하네스 구축·유지)",
   "owner": {
     "name": "bykolee"
   },
@@ -12,6 +12,10 @@
     {
       "name": "byko-goal",
       "source": "./plugins/byko-goal"
+    },
+    {
+      "name": "byko-harness",
+      "source": "./plugins/byko-harness"
     }
   ]
 }

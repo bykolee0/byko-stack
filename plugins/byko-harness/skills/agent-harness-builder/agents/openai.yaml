@@ -1,0 +1,4 @@
+interface:
+  display_name: "agent-harness-builder"
+  short_description: "리포에 AGENTS.md 중심의 하네스(정책 중심 wiki, 문서 규격 검사)를 만들고 유지합니다."
+  default_prompt: "$agent-harness-builder로 이 리포의 하네스를 구성하고, 이미 있으면 점검해 최신으로 맞춰줘."

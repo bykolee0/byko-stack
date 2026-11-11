@@ -1,0 +1,8 @@
+{
+  "name": "byko-harness",
+  "description": "리포에 코딩 에이전트용 하네스를 만들고 유지한다. AGENTS.md를 중심 색인으로, 정책을 중추로 하는 docs/wiki를 최종 정의(SSOT)로 두고, 문서 규격을 리포의 테스트로 검사한다. 스킬 agent-harness-builder 하나로 새 리포·기존 리포·하네스 유지·개발이 아닌 리포를 다룬다",
+  "version": "0.1.0",
+  "author": {
+    "name": "bykolee"
+  }
+}
