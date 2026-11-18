@@ -146,7 +146,7 @@ Subagents have no Skill or Agent tool, so they cannot call the orchestration ski
 
 ### byko-stack-codex
 
-**0.6.0 — goal-driven playbooks for Codex.** `byko-work` handles issue, feature, incident, change, and resume requests through explicit diagnosis, change, or composed paths. Diagnosis-only requests stop at an evidence-backed explanation. Specialists remain independently usable.
+**0.6.1 — goal-driven playbooks for Codex.** `byko-work` handles issue, feature, incident, change, and resume requests through explicit diagnosis, change, or composed paths. Diagnosis-only requests stop at an evidence-backed explanation. Specialists remain independently usable.
 
 | Skill | Responsibility |
 | --- | --- |

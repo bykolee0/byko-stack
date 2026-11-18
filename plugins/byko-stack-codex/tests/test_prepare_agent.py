@@ -37,7 +37,7 @@ class PrepareAgentTest(unittest.TestCase):
                 result = self.run_role(role)
                 self.assertEqual(result.returncode, 0, result.stderr)
                 output = json.loads(result.stdout)
-                self.assertEqual(output["model"], "gpt-6.1-sol")
+                self.assertEqual(output["model"], "gpt-6.2-sol")
                 self.assertEqual(output["reasoning_effort"], "high")
                 self.assertNotIn(str(PLUGIN), output["message"])
                 for skill in skills:
@@ -45,7 +45,7 @@ class PrepareAgentTest(unittest.TestCase):
 
     def test_reads_configuration_instead_of_hardcoding(self):
         path = self.package / "agents/byko-analyst.toml"
-        path.write_text(path.read_text().replace('"gpt-6.1-sol"', '"test-model"').replace('"high"', '"medium"'))
+        path.write_text(path.read_text().replace('"gpt-6.2-sol"', '"test-model"').replace('"high"', '"medium"'))
         output = json.loads(self.run_role("byko-analyst").stdout)
         self.assertEqual((output["model"], output["reasoning_effort"]), ("test-model", "medium"))
 
@@ -71,7 +71,7 @@ class PrepareAgentTest(unittest.TestCase):
         path = self.package / "agents/byko-analyst.toml"
         original = path.read_text()
         variants = [
-            "invalid = [", original.replace('model = "gpt-6.1-sol"', 'model = 7'),
+            "invalid = [", original.replace('model = "gpt-6.2-sol"', 'model = 7'),
             original.replace('name = "byko-analyst"', 'name = "another"'),
             original.replace('model_reasoning_effort = "high"', ''),
             original + '\nsandbox_mode = "read-only"\n',

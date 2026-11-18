@@ -4,7 +4,7 @@
 
 ## 구성
 
-모든 역할의 기본 설정은 `model = "gpt-6.1-sol"`, `model_reasoning_effort = "high"`다. 기본 내장 역할을 덮어쓰지 않도록 `byko-` 이름을 사용한다.
+모든 역할의 기본 설정은 `model = "gpt-6.2-sol"`, `model_reasoning_effort = "high"`다. 기본 내장 역할을 덮어쓰지 않도록 `byko-` 이름을 사용한다.
 
 | 역할 | 맡기는 일 | 참고하는 스킬 |
 |---|---|---|
@@ -67,7 +67,7 @@ cp -i agents/byko-*.toml ~/.codex/agents/
 
 프로젝트용은 작업할 프로젝트의 `.codex/agents/`를 대상으로 한다. 등록 후 새 세션에서 역할이 발견되는지, 모델·노력 수준이 실제 적용됐는지 확인한다. native 역할 파일에 지정된 모델·노력 수준을 바꾸려면 해당 TOML을 수정한다. 이 저장소의 업데이트가 이미 복사한 사용자 파일에 자동 반영되지는 않는다.
 
-공식 참고: [Codex custom agents](https://learn.chatgpt.com/docs/agent-configuration/subagents#custom-agents), [GPT-6.1 Sol](https://developers.openai.com/api/docs/models/gpt-6.1-sol). 호스트별 등록·생성 지원은 실제 실행 환경에서 확인한다.
+공식 참고: [Codex custom agents](https://learn.chatgpt.com/docs/agent-configuration/subagents#custom-agents), [GPT-6.2 Sol](https://developers.openai.com/api/docs/models/gpt-6.2-sol). 호스트별 등록·생성 지원은 실제 실행 환경에서 확인한다.
 
 ## 검증 범위
 

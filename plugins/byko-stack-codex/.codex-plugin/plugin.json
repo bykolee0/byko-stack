@@ -1,6 +1,6 @@
 {
   "name": "byko-stack-codex",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "description": "이슈·기능·알람 요청을 목표 중심의 조사·설계·구현·독립 검증으로 연결하는 Codex 플레이북과 재사용 스킬.",
   "author": {
     "name": "bykolee",
