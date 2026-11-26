@@ -99,7 +99,7 @@ codex plugin add byko-harness@byko-plugins
 
 ### byko-stack
 
-**0.5.2 — a Claude Code work loop that carries one request from goal to verification and returns to the stage that caused a problem.** Feature work, fixes, refactors, review follow-ups, cause/impact questions about a report or alert, and resuming such work all enter through the `work` skill, which owns the whole request. Explanation-only questions and general conversation are left alone.
+**0.5.3 — a Claude Code work loop that carries one request from goal to verification and returns to the stage that caused a problem.** Feature work, fixes, refactors, review follow-ups, cause/impact questions about a report or alert, and resuming such work all enter through the `work` skill, which owns the whole request. Explanation-only questions and general conversation are left alone.
 
 ```
 request ─▶ work ─▶ restore goal → trace links → design + checks → implement → verify → hand off
@@ -110,7 +110,7 @@ request ─▶ work ─▶ restore goal → trace links → design + checks → 
 - **Paths.** The result the request wants picks one path: diagnosis (event, cause, impact), change (feature, fix), or composed (comparisons, plan-only, other work). The path's items are copied into the work record; a skipped item stays with its reason.
 - **Three ordering gates.** No method before the current state (as-is) is seen. Verification criteria are written before implementation. Nothing is done until the final target commit has an independent verdict.
 - **Weight comes from research.** The default is "normal"; "light" needs evidence from research. Sensitive axes (money, permissions, data, policy) add the matching review perspectives and preservation checks instead of being handed to a person.
-- **What goes to a person.** Only policy or intent decisions that research, review, and re-research cannot settle, and irreversible or shared-environment actions the request did not allow — in a form that can be decided. There are no per-stage approval waits.
+- **What goes to a person.** Two kinds, in a form that can be decided. First, choices that the evidence (the request and agreements, policy and contracts, existing implementations) cannot settle even after research and whose outcome differs widely by option: conflicts or gaps in policy or intent, major design decisions, and trade-offs with no clear winner. Second, changes the request did not ask for to an existing public contract, stored data, or externally visible behavior, large structural changes, and irreversible, shared-environment, or production actions that were not allowed. Every other design choice is decided from the evidence; those that affect users or differ from the request are reported with their reason under "decided". There are no per-stage approval waits.
 
 **Work record** — `.byko/work/<date-name>/` in the target repository. `.byko/.gitignore` (a single `*`) keeps it out of git, so it never lands in a PR.
 
